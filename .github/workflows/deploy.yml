@@ -44,7 +44,7 @@ jobs:
 
       - name: Build Production Assets
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://codm-g4u9.onrender.com/api' }}
         run: npm run build
 
       - name: Setup Pages
