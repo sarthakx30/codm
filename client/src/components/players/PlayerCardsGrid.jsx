@@ -1,6 +1,7 @@
 import React from 'react';
 import Sparkline from './Sparkline';
-import { getPlayerMapBreakdown } from '../../engine/playerAnalytics';
+import DivergenceBar from './DivergenceBar';
+import { getPlayerMapBreakdown, getPlayerMapHighlights } from '../../engine/playerAnalytics';
 
 export default function PlayerCardsGrid({ players = [], matches = [] }) {
   if (!players.length) {
@@ -15,6 +16,7 @@ export default function PlayerCardsGrid({ players = [], matches = [] }) {
         const tierSign = p.tierDiff >= 0 ? '+' : '';
         const tierColor = p.tierDiff >= 0 ? 'text-[#00e5ff]' : 'text-[#ff334b]';
         const breakdown = getPlayerMapBreakdown(matches, p.name);
+        const highlights = getPlayerMapHighlights(breakdown);
 
         return (
           <div
@@ -84,6 +86,32 @@ export default function PlayerCardsGrid({ players = [], matches = [] }) {
               </div>
             </div>
 
+            {/* Map Highlights Quick Chips */}
+            {(highlights.best || highlights.worst) && (
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 flex-wrap">
+                {highlights.best && (
+                  <div
+                    className="flex items-center gap-1.5 text-[10px] font-mono-num bg-[#00e5ff]/10 border border-[#00e5ff]/30 px-2 py-0.5 rounded-xs"
+                    title={`+${highlights.best.delta}% composite efficiency vs teammates on ${highlights.best.label}`}
+                  >
+                    <span className="text-[#00e5ff] font-bold">STRONGHOLD:</span>
+                    <span className="text-white font-medium truncate max-w-[130px]">{highlights.best.map}</span>
+                    <span className="text-[#00e5ff] font-bold">+{highlights.best.delta}%</span>
+                  </div>
+                )}
+                {highlights.worst && (
+                  <div
+                    className="flex items-center gap-1.5 text-[10px] font-mono-num bg-[#ff334b]/10 border border-[#ff334b]/30 px-2 py-0.5 rounded-xs"
+                    title={`${highlights.worst.delta}% composite efficiency vs teammates on ${highlights.worst.label}`}
+                  >
+                    <span className="text-[#ff334b] font-bold">VULNERABLE:</span>
+                    <span className="text-white font-medium truncate max-w-[130px]">{highlights.worst.map}</span>
+                    <span className="text-[#ff334b] font-bold">{highlights.worst.delta}%</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Sparkline & games summary */}
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10 text-xs font-mono-num text-[#7d90a6]">
               <span>
@@ -95,34 +123,51 @@ export default function PlayerCardsGrid({ players = [], matches = [] }) {
               </div>
             </div>
 
-            {/* Collapsible Map-Mode Drilldown */}
+            {/* Collapsible Map-Mode Drilldown with Visual Divergence */}
             {breakdown && breakdown.length > 0 && (
               <details className="mt-2.5 pt-2 border-t border-[#223046] text-xs group">
-                <summary className="cursor-pointer font-display text-xs text-[#00e5ff] tracking-wider select-none hover:text-white transition-colors">
-                  ▶ MAP - MODE BREAKDOWN ({breakdown.length})
+                <summary className="cursor-pointer font-display text-xs text-[#00e5ff] tracking-wider select-none hover:text-white transition-colors flex items-center justify-between">
+                  <span>▶ MAP EFFICIENCY & SQUAD DIVERGENCE ({breakdown.length})</span>
+                  <span className="text-[10px] text-[#7d90a6] font-mono-num font-normal group-open:hidden">
+                    Click to view map stats
+                  </span>
                 </summary>
                 <div className="overflow-x-auto mt-2 border border-[#223046] bg-[#0c111a]/80">
-                  <table className="w-full text-left font-mono-num text-[11px] border-collapse">
+                  <table className="w-full text-left font-mono-num text-[11px] border-collapse min-w-[500px]">
                     <thead>
-                      <tr className="border-b border-[#223046] text-[#7d90a6]">
-                        <th className="py-1 px-2 font-semibold">Map - Mode</th>
-                        <th className="py-1 px-1.5 text-right font-semibold">Games</th>
-                        <th className="py-1 px-1.5 text-right font-semibold">K/D</th>
-                        <th className="py-1 px-1.5 text-right font-semibold">Score / OBJ</th>
-                        <th className="py-1 px-2 text-right font-semibold">Win %</th>
+                      <tr className="border-b border-[#223046] text-[#7d90a6] bg-[#0c111a]">
+                        <th className="py-1.5 px-2.5 font-semibold">Map - Mode</th>
+                        <th className="py-1.5 px-1.5 text-center font-semibold">Games</th>
+                        <th className="py-1.5 px-2 text-right font-semibold">K/D (vs Team)</th>
+                        <th className="py-1.5 px-2 text-center font-semibold">Win %</th>
+                        <th className="py-1.5 px-2.5 text-left font-semibold">Efficiency vs Squad</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#223046]/40">
                       {breakdown.map((row, rIdx) => (
-                        <tr key={rIdx} className="hover:bg-[#161e2e]/50">
-                          <td className="py-1 px-2 text-white font-medium">{row.label}</td>
-                          <td className="py-1 px-1.5 text-right text-[#7d90a6]">{row.played}</td>
-                          <td className="py-1 px-1.5 text-right text-white font-bold">{row.kd}</td>
-                          <td className="py-1 px-1.5 text-right text-[#ffb800]">
-                            {row.avgScore}
-                            {row.avgHpTime > 0 ? ` (${row.avgHpTime}s)` : ''}
+                        <tr key={rIdx} className="hover:bg-[#161e2e]/50 transition-colors">
+                          <td className="py-1.5 px-2.5 text-white font-medium">
+                            <span className="text-white font-bold">{row.map}</span>
+                            <span className="text-[10px] text-[#7d90a6] block leading-tight">{row.mode}</span>
                           </td>
-                          <td className="py-1 px-2 text-right text-[#00e5ff] font-bold">{row.winRate}%</td>
+                          <td className="py-1.5 px-1.5 text-center text-[#7d90a6]">{row.played}</td>
+                          <td className="py-1.5 px-2 text-right">
+                            <span className="text-white font-bold">{row.kd}</span>
+                            <span className="text-[10px] text-[#7d90a6] block">tm: {row.teamKd}</span>
+                          </td>
+                          <td className="py-1.5 px-2 text-center">
+                            <span className={`font-bold ${row.winRate >= 60 ? 'text-[#00e5ff]' : row.winRate <= 40 ? 'text-[#ff334b]' : 'text-[#f0f4f8]'}`}>
+                              {row.winRate}%
+                            </span>
+                          </td>
+                          <td className="py-1.5 px-2.5">
+                            <DivergenceBar
+                              delta={row.delta}
+                              rating={row.rating}
+                              tag={row.tag}
+                              componentDeltas={row.componentDeltas}
+                            />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
