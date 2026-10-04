@@ -13,6 +13,9 @@ import PlayerCardsGrid from './components/players/PlayerCardsGrid';
 import PlayerTableView from './components/players/PlayerTableView';
 import MatchList from './components/matches/MatchList';
 import BatchUploadModal from './components/upload/BatchUploadModal';
+import AliasManagerModal from './components/aliases/AliasManagerModal';
+import ScrimCardModal from './components/scrim/ScrimCardModal';
+import { Users } from 'lucide-react';
 
 import { api, onServerWakingChange } from './api/client';
 import { calculateHonors } from './engine/honors';
@@ -33,11 +36,22 @@ export default function App() {
   const [wakingMsg, setWakingMsg] = useState('');
   const [serverError, setServerError] = useState(false);
 
+  // Modals for Scrim Graphic & Alias Manager
+  const [isAliasModalOpen, setIsAliasModalOpen] = useState(false);
+  const [isScrimModalOpen, setIsScrimModalOpen] = useState(false);
+  const [scrimMatches, setScrimMatches] = useState([]);
+
   // Show tactical toast
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 2200);
   }, []);
+
+  const handleOpenScrimModal = (matchesList) => {
+    if (!matchesList || matchesList.length === 0) return;
+    setScrimMatches(matchesList);
+    setIsScrimModalOpen(true);
+  };
 
   // Listen for server cold-start waking events
   useEffect(() => {
@@ -159,6 +173,14 @@ export default function App() {
               <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
               PLAYER PERFORMANCE ({playerStats.length})
             </h2>
+            <button
+              type="button"
+              onClick={() => setIsAliasModalOpen(true)}
+              className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#ffb800] text-[#ffb800] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(255,184,0,0.15)]"
+            >
+              <Users size={13} />
+              <span>ROSTER & ALIASES</span>
+            </button>
           </div>
           <SortBar
             sortKey={sortKey}
@@ -181,6 +203,7 @@ export default function App() {
             matches={filteredMatches}
             onUpdateMatch={handleUpdateMatch}
             onDeleteMatch={handleDeleteMatch}
+            onOpenScrimModal={handleOpenScrimModal}
           />
         </section>
       )}
@@ -188,9 +211,29 @@ export default function App() {
       {/* ADD MATCH TAB */}
       {activeTab === 'add' && (
         <section className="animate-fadeIn">
-          <BatchUploadModal onMatchSaved={loadMatches} showToast={showToast} />
+          <BatchUploadModal
+            onMatchSaved={loadMatches}
+            showToast={showToast}
+            onOpenScrimModal={handleOpenScrimModal}
+            onOpenAliasModal={() => setIsAliasModalOpen(true)}
+          />
         </section>
       )}
+
+      {/* MODALS */}
+      <AliasManagerModal
+        isOpen={isAliasModalOpen}
+        onClose={() => setIsAliasModalOpen(false)}
+        matches={matches}
+        onAliasesUpdated={loadMatches}
+      />
+
+      <ScrimCardModal
+        isOpen={isScrimModalOpen}
+        onClose={() => setIsScrimModalOpen(false)}
+        selectedMatches={scrimMatches}
+        showToast={showToast}
+      />
 
       <Navbar activeTab={activeTab} onTabChange={changeTab} />
       <Toast message={toastMessage} />

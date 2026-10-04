@@ -59,6 +59,7 @@ def clean_players(lst: Optional[List[Dict[str, Any]]], aliases: Dict[str, str]) 
             name = aliases.get(name, name)
         out.append({
             "name": name[:40],
+            "raw_name": raw_name[:40],
             "score": num(p.get("score")),
             "kills": num(p.get("kills")),
             "deaths": num(p.get("deaths")),

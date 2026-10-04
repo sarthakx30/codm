@@ -6,6 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-10-05
+
+### Scrim Series Graphic Generator
+- **Multi-Map Esports Scrim Card (`ScrimCardModal.jsx`):** High-resolution (2400 × 1350 px, 16:9 Retina) canvas renderer generating broadcast-ready scrim summary graphics for Discord and Twitter/X embeds.
+- **Series Score & Progression Header:** Dynamically computes aggregate series outcome (`VICTORY 2-1`, `3-0`, etc.) with customizable Opponent Clan Tag, Our Team Name, and Series Format badges.
+- **Map Progression Cards:** Displays every game in the series with Map Name, Game Mode, final scores, Win/Loss indicator, and individual Map MVP fragger highlights.
+- **Aggregate Squad Leaderboard:** Combined multi-map stats table calculating Total Kills, Deaths, Series K/D, Assists, Total OBJ Time, Cumulative Score, and Average Impact across all games in the series.
+- **Series MVP Spotlight Banner:** Dedicated cyber-frame highlighting the top overall performer across the series with apex fragger badges and stat highlights.
+- **Instant Discord Sharing:** 1-click **Copy Image to Clipboard** (`navigator.clipboard.write`) for instant `Ctrl+V` pasting into Discord scrim channels, plus **Download High-Res PNG**.
+- **Interactive Multi-Match Selection (`MatchList.jsx`):** Added a dedicated "SELECT SCRIM" toggle mode with checkboxes and a persistent floating bottom bar ("X Maps Selected $\rightarrow$ Generate Scrim Card").
+- **Batch Upload Integration (`BatchUploadModal.jsx`):** Direct "Generate Scrim Card" trigger available immediately upon uploading 2+ match screenshots.
+
+### Team Roster & Alias Manager
+- **Dedicated Roster & Alias Manager (`AliasManagerModal.jsx`):** Accessible via "ROSTER & ALIASES" in the Player Performance tab and screenshot upload queue.
+- **Canonical Player Grouping:** Displays all active team members with their linked raw OCR gamertag variations as tag chips with 1-click unlink/delete.
+- **Intelligent Unmapped Name Detection:** Automatically scans match history for unmapped gamertags and shows their match appearance frequencies with a 1-click "Map to Player" assigner.
+- **Raw Name Preservation & Instant Auto-Mapping:** Screenshot OCR parser preserves raw gamertags, seamlessly auto-canonicalizes existing aliases, and automatically updates the database when names are modified during review.
+- **Backend CRUD Endpoints (`/api/aliases`):** Added `GET /api/aliases/records` for metadata listing and `DELETE /api/aliases/{raw_name}` for unlinking aliases atomically.
+
+---
+
 ## [1.0.1] - 2026-10-05
 
 ### UI / Frontend

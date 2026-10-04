@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 class PlayerSchema(BaseModel):
     name: str
+    raw_name: Optional[str] = None
     score: int = 0
     kills: int = 0
     deaths: int = 0

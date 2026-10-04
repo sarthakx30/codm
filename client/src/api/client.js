@@ -92,10 +92,15 @@ export const api = {
 
   // Aliases
   getAliases: () => request('/aliases'),
+  getAliasRecords: () => request('/aliases/records'),
   saveAliases: (aliases) =>
     request('/aliases', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(aliases)
+    }),
+  deleteAlias: (rawName) =>
+    request(`/aliases/${encodeURIComponent(rawName)}`, {
+      method: 'DELETE'
     })
 };

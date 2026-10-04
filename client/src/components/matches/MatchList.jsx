@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import ScoreboardTable from './ScoreboardTable';
 import { parseTier } from '../../engine/playerAnalytics';
-import { Trash2, Save } from 'lucide-react';
+import { Trash2, Save, Sparkles, CheckSquare, Square, Layers, X } from 'lucide-react';
 
-export default function MatchList({ matches = [], onUpdateMatch, onDeleteMatch }) {
+export default function MatchList({
+  matches = [],
+  onUpdateMatch,
+  onDeleteMatch,
+  onOpenScrimModal
+}) {
   const [expandedId, setExpandedId] = useState(null);
   const [editState, setEditState] = useState({});
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   if (!matches.length) {
     return (
@@ -15,7 +22,21 @@ export default function MatchList({ matches = [], onUpdateMatch, onDeleteMatch }
     );
   }
 
+  const toggleSelectMatch = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const toggleExpand = (m) => {
+    if (isSelectMode) {
+      toggleSelectMatch(m.id);
+      return;
+    }
+
     if (expandedId === m.id) {
       setExpandedId(null);
     } else {
@@ -68,12 +89,29 @@ export default function MatchList({ matches = [], onUpdateMatch, onDeleteMatch }
           <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
           MATCH HISTORY ({sortedMatches.length})
         </h2>
-        <span className="text-[11px] font-mono-num text-[#7d90a6]">Tap match to view & edit</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setIsSelectMode(prev => !prev);
+              if (isSelectMode) setSelectedIds(new Set());
+            }}
+            className={`px-2.5 py-1 text-xs font-display flex items-center gap-1.5 border transition-all clip-corner-sm cursor-pointer ${
+              isSelectMode
+                ? 'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/15 font-bold shadow-[0_0_8px_rgba(0,229,255,0.3)]'
+                : 'border-[#354b6d] text-[#7d90a6] hover:text-white bg-[#111723]'
+            }`}
+          >
+            <Layers size={13} />
+            <span>{isSelectMode ? 'EXIT SELECTION' : 'SELECT SCRIM'}</span>
+          </button>
+        </div>
       </div>
 
       {sortedMatches.map(m => {
         const isWin = m.result === 'W';
         const isExpanded = expandedId === m.id;
+        const isSelected = selectedIds.has(m.id);
         const currentEdit = editState[m.id] || {
           opponent: m.opponent || '',
           tier: m.tier || '',
@@ -85,48 +123,63 @@ export default function MatchList({ matches = [], onUpdateMatch, onDeleteMatch }
           <div
             key={m.id}
             className={`bg-[#111723] border border-[#223046] border-l-4 transition-all clip-corner ${
-              isWin ? 'border-l-[#00e5ff]' : 'border-l-[#ff334b]'
+              isSelected
+                ? 'border-[#00e5ff] bg-[#111e2e]'
+                : isWin
+                ? 'border-l-[#00e5ff]'
+                : 'border-l-[#ff334b]'
             }`}
           >
             {/* Header summary button */}
             <div
               onClick={() => toggleExpand(m)}
-              className="p-3.5 cursor-pointer hover:bg-[#161e2e]/40 transition-colors select-none"
+              className="flex items-center cursor-pointer hover:bg-[#161e2e]/40 transition-colors select-none"
             >
-              <div className="flex items-baseline justify-between mb-1.5">
-                <div className="flex items-baseline gap-2">
-                  <span
-                    className={`font-display text-2xl font-bold tracking-wider ${
-                      isWin ? 'text-[#00e5ff]' : 'text-[#ff334b]'
-                    }`}
-                  >
-                    {isWin ? 'VICTORY' : 'DEFEAT'}
-                  </span>
-                  <span className="font-mono-num text-xl font-bold text-white">
-                    {m.score_us} - {m.score_them}
+              {isSelectMode && (
+                <div className="pl-3.5 text-[#00e5ff] flex items-center justify-center">
+                  {isSelected ? (
+                    <CheckSquare size={19} className="text-[#00e5ff]" />
+                  ) : (
+                    <Square size={19} className="text-[#7d90a6]" />
+                  )}
+                </div>
+              )}
+              <div className="flex-1 p-3.5">
+                <div className="flex items-baseline justify-between mb-1.5">
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      className={`font-display text-2xl font-bold tracking-wider ${
+                        isWin ? 'text-[#00e5ff]' : 'text-[#ff334b]'
+                      }`}
+                    >
+                      {isWin ? 'VICTORY' : 'DEFEAT'}
+                    </span>
+                    <span className="font-mono-num text-xl font-bold text-white">
+                      {m.score_us} - {m.score_them}
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono-num text-[#7d90a6]">{m.played_at_raw}</span>
+                </div>
+
+                {/* Tag row */}
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono-num">
+                  {m.tier && (
+                    <span className="bg-[#ffb800]/15 border border-[#ffb800] text-[#ffb800] px-1.5 py-0.2">
+                      {m.tier}
+                    </span>
+                  )}
+                  {m.game_type && (
+                    <span className="bg-white/5 border border-[#223046] text-[#f0f4f8] px-1.5 py-0.2 uppercase">
+                      {m.game_type}
+                    </span>
+                  )}
+                  {m.opponent && (
+                    <span className="font-bold text-white">VS {m.opponent}</span>
+                  )}
+                  <span className="text-[#7d90a6]">
+                    {m.map || 'Unknown'} - {m.mode || 'Unknown'}
                   </span>
                 </div>
-                <span className="text-xs font-mono-num text-[#7d90a6]">{m.played_at_raw}</span>
-              </div>
-
-              {/* Tag row */}
-              <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono-num">
-                {m.tier && (
-                  <span className="bg-[#ffb800]/15 border border-[#ffb800] text-[#ffb800] px-1.5 py-0.2">
-                    {m.tier}
-                  </span>
-                )}
-                {m.game_type && (
-                  <span className="bg-white/5 border border-[#223046] text-[#f0f4f8] px-1.5 py-0.2 uppercase">
-                    {m.game_type}
-                  </span>
-                )}
-                {m.opponent && (
-                  <span className="font-bold text-white">VS {m.opponent}</span>
-                )}
-                <span className="text-[#7d90a6]">
-                  {m.map || 'Unknown'} - {m.mode || 'Unknown'}
-                </span>
               </div>
             </div>
 
@@ -250,6 +303,15 @@ export default function MatchList({ matches = [], onUpdateMatch, onDeleteMatch }
                       </button>
                       <button
                         type="button"
+                        onClick={() => onOpenScrimModal && onOpenScrimModal([m])}
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#00e5ff]/50 text-[#00e5ff] hover:bg-[#00e5ff]/10 font-display text-sm clip-corner-sm transition-all cursor-pointer"
+                        title="Generate Match Graphic"
+                      >
+                        <Sparkles size={13} />
+                        <span>GRAPHIC</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleDelete(m.id)}
                         className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-[#ff334b] text-[#ff334b] hover:bg-[#ff334b]/15 font-display text-sm clip-corner-sm transition-all cursor-pointer"
                         title="Delete Match"
@@ -265,6 +327,40 @@ export default function MatchList({ matches = [], onUpdateMatch, onDeleteMatch }
           </div>
         );
       })}
+
+      {/* Floating Scrim Generator Action Bar */}
+      {isSelectMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-16 left-0 right-0 max-w-2xl mx-auto px-3.5 z-40 animate-slideUp">
+          <div className="bg-[#0c111a]/95 border-2 border-[#00e5ff] backdrop-blur-md p-3 clip-corner shadow-[0_0_30px_rgba(0,229,255,0.35)] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00e5ff] animate-pulse" />
+              <span className="font-display font-bold text-white text-sm tracking-wide">
+                {selectedIds.size} {selectedIds.size === 1 ? 'MAP' : 'MAPS'} SELECTED
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+                className="px-2.5 py-1 text-xs font-mono-num text-[#7d90a6] hover:text-white"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const selectedList = sortedMatches.filter(m => selectedIds.has(m.id));
+                  if (onOpenScrimModal) onOpenScrimModal(selectedList);
+                }}
+                className="px-4 py-1.5 bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(0,229,255,0.4)] cursor-pointer"
+              >
+                <Sparkles size={14} />
+                <span>GENERATE SCRIM CARD</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

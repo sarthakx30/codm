@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { api } from '../../api/client';
 import { parseTier } from '../../engine/playerAnalytics';
-import { UploadCloud, CheckCircle2, AlertTriangle, XCircle, ArrowRight, UserMinus } from 'lucide-react';
+import { UploadCloud, CheckCircle2, AlertTriangle, XCircle, ArrowRight, UserMinus, Users, Sparkles } from 'lucide-react';
 
 function shrinkImage(file) {
   return new Promise(resolve => {
@@ -20,15 +20,17 @@ function shrinkImage(file) {
   });
 }
 
-export default function BatchUploadModal({ onMatchSaved, showToast }) {
+export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimModal, onOpenAliasModal }) {
   const [queue, setQueue] = useState([]);
   const [queueIndex, setQueueIndex] = useState(0);
+  const [lastSavedBatch, setLastSavedBatch] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleFiles = async (files) => {
     const fileList = Array.from(files);
     if (!fileList.length) return;
 
+    setLastSavedBatch([]);
     const initialQueue = fileList.map((f, i) => ({
       idx: i,
       file: f,
@@ -49,10 +51,17 @@ export default function BatchUploadModal({ onMatchSaved, showToast }) {
       try {
         const shrunkBlob = await shrinkImage(fileList[i]);
         const response = await api.parseScreenshot(shrunkBlob);
+        const matchData = response.match;
+        if (matchData && matchData.us) {
+          matchData.us = matchData.us.map(p => ({
+            ...p,
+            _originalName: p.raw_name || p.name
+          }));
+        }
         setQueue(prev => prev.map((q, idx) => idx === i ? {
           ...q,
           status: 'ready',
-          match: response.match,
+          match: matchData,
           duplicate: response.duplicate
         } : q));
       } catch (err) {
@@ -67,7 +76,10 @@ export default function BatchUploadModal({ onMatchSaved, showToast }) {
 
   const cur = queue[queueIndex];
 
-  const advanceQueue = () => {
+  const advanceQueue = (newlySavedMatch) => {
+    if (newlySavedMatch) {
+      setLastSavedBatch(prev => [...prev, newlySavedMatch]);
+    }
     const nextIdx = queue.findIndex((q, i) => i > queueIndex && q.status !== 'saved');
     if (nextIdx !== -1) {
       setQueueIndex(nextIdx);
@@ -108,12 +120,12 @@ export default function BatchUploadModal({ onMatchSaved, showToast }) {
         }
       });
 
-      await api.saveMatch(cur.match, renames);
+      const savedMatch = await api.saveMatch(cur.match, renames);
       showToast('Match saved.');
       if (onMatchSaved) onMatchSaved();
 
       setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, status: 'saved' } : q));
-      advanceQueue();
+      advanceQueue(savedMatch || cur.match);
     } catch (err) {
       alert(`Save failed: ${err.message}`);
     }
@@ -121,10 +133,45 @@ export default function BatchUploadModal({ onMatchSaved, showToast }) {
 
   return (
     <div className="mb-10">
-      <h2 className="text-lg font-display text-white flex items-center gap-2 mb-2">
-        <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
-        ADD MATCH // SCREENSHOT OCR
-      </h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-display text-white flex items-center gap-2 m-0">
+          <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
+          ADD MATCH // SCREENSHOT OCR
+        </h2>
+        {onOpenAliasModal && (
+          <button
+            type="button"
+            onClick={onOpenAliasModal}
+            className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#ffb800] text-[#ffb800] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(255,184,0,0.15)]"
+          >
+            <Users size={13} />
+            <span>ROSTER & ALIASES</span>
+          </button>
+        )}
+      </div>
+
+      {/* Completion Banner if batch of 2+ matches just finished saving */}
+      {lastSavedBatch.length >= 2 && queue.length === 0 && (
+        <div className="bg-[#111723] border border-[#00e5ff] p-4 mb-4 clip-corner-sm flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+          <div>
+            <div className="text-white font-display font-bold text-sm flex items-center gap-1.5">
+              <CheckCircle2 size={16} className="text-[#10b981]" />
+              <span>SCRIM SERIES SAVED ({lastSavedBatch.length} MAPS)</span>
+            </div>
+            <p className="text-xs font-mono-num text-[#7d90a6] m-0 mt-0.5">
+              Generate a shareable cyber-themed esports match graphic for Discord or Twitter.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenScrimModal && onOpenScrimModal(lastSavedBatch)}
+            className="px-4 py-2 bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(0,229,255,0.4)] cursor-pointer whitespace-nowrap"
+          >
+            <Sparkles size={14} />
+            <span>GENERATE SCRIM CARD</span>
+          </button>
+        </div>
+      )}
 
       {/* File Dropzone */}
       <div className="bg-[#111723] border-2 border-dashed border-[#354b6d] hover:border-[#00e5ff] transition-colors p-6 text-center clip-corner-sm mb-4">
@@ -153,11 +200,26 @@ export default function BatchUploadModal({ onMatchSaved, showToast }) {
       {/* Batch Navigation Chips */}
       {queue.length > 1 && (
         <div className="bg-[#111723] border border-[#223046] p-3 mb-4 clip-corner-sm">
-          <div className="flex items-center justify-between text-xs font-mono-num text-[#7d90a6] mb-2">
-            <span className="text-[#00e5ff] font-display font-bold text-sm">
-              BATCH REVIEW ({queue.filter(q => q.status === 'saved').length}/{queue.length} SAVED)
-            </span>
-            <span>MATCH {queueIndex + 1} OF {queue.length}</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono-num text-[#7d90a6] mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[#00e5ff] font-display font-bold text-sm">
+                BATCH REVIEW ({queue.filter(q => q.status === 'saved').length}/{queue.length} SAVED)
+              </span>
+              <span>MATCH {queueIndex + 1} OF {queue.length}</span>
+            </div>
+            {onOpenScrimModal && queue.some(q => q.match) && (
+              <button
+                type="button"
+                onClick={() => {
+                  const matchesToShare = queue.map(q => q.match).filter(Boolean);
+                  if (matchesToShare.length > 0) onOpenScrimModal(matchesToShare);
+                }}
+                className="px-2.5 py-1 bg-[#00e5ff]/15 hover:bg-[#00e5ff]/25 border border-[#00e5ff] text-[#00e5ff] text-xs font-display flex items-center gap-1 transition-all clip-corner-sm cursor-pointer"
+              >
+                <Sparkles size={12} />
+                <span>GENERATE SCRIM CARD ({queue.filter(q => q.match).length})</span>
+              </button>
+            )}
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {queue.map((q, idx) => {
