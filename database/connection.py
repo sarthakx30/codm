@@ -12,11 +12,14 @@ SCHEMA_FILE = DB_DIR / "schema.sql"
 
 class Database:
     def __init__(self, db_url: Optional[str] = None, auth_token: Optional[str] = None):
-        self.db_url = db_url or os.environ.get("TURSO_DATABASE_URL", "")
+        raw_url = db_url or os.environ.get("TURSO_DATABASE_URL", "")
         self.auth_token = auth_token or os.environ.get("TURSO_AUTH_TOKEN", "")
         self._is_turso = bool(
-            self.db_url and ("turso.io" in self.db_url or self.db_url.startswith("libsql://"))
+            raw_url and ("turso.io" in raw_url or raw_url.startswith("libsql://"))
         )
+        if self._is_turso and raw_url.startswith("libsql://"):
+            raw_url = raw_url.replace("libsql://", "https://")
+        self.db_url = raw_url
 
     def get_sqlite_conn(self) -> sqlite3.Connection:
         """Create a local sqlite3 connection with dict-like row factory and foreign keys enabled."""
