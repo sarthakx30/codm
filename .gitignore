@@ -1,0 +1,42 @@
+# === Secrets ===
+.key
+.env
+.env.*
+!.env.example
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
+
+# === Database ===
+database/codm.db
+*.db
+*.sqlite
+*.sqlite3
+
+# === Node / Frontend ===
+node_modules/
+client/dist/
+.vite/
+client/.vite/
+
+# === IDE / OS ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+.DS_Store
+
+# === Logs & Backups ===
+*.log
+*.bak
+

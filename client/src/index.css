@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-dark: #080c14;
+    --panel-dark: #111723;
+    --card-dark: #161e2e;
+    --line-dark: #223046;
+    --line-bright: #354b6d;
+    --cyan-accent: #00e5ff;
+    --gold-accent: #ffb800;
+    --crimson-accent: #ff334b;
+    --text-primary: #f0f4f8;
+    --text-muted: #7d90a6;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    background-image: 
+      linear-gradient(rgba(0, 229, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 229, 255, 0.025) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: 'Rajdhani', -apple-system, sans-serif;
+    color: var(--text-primary);
+  }
+}
+
+.font-display {
+  font-family: 'Teko', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.font-body {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.font-mono-num {
+  font-family: 'Share Tech Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tactical clipped corners */
+.clip-corner {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+.clip-corner-sm {
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+}
+
+.clip-corner-lg {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+
+.clip-badge {
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+.clip-pip {
+  transform: skewX(-20deg);
+}
+
+/* Tactical glow utilities */
+.glow-cyan {
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.3);
+}
+
+.glow-gold {
+  box-shadow: 0 0 14px rgba(255, 184, 0, 0.3);
+}
+
+.glow-crimson {
+  box-shadow: 0 0 14px rgba(255, 51, 75, 0.3);
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+  background: #223046;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00e5ff;
+}
