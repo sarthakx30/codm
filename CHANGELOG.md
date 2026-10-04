@@ -8,6 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2026-10-05
 
+### Desktop & Laptop Appearance & Navigation
+- **Unified Tactical Sidebar Menu (`Sidebar.jsx`):**
+  - **Desktop/Laptop Experience:** Fixed tactical command sidebar (`lg:w-64 xl:w-72`) displaying clan branding, real-time database sync health badge, navigation deck, and quick operation shortcuts (`ROSTER & ALIASES`).
+  - **Mobile/Tablet Experience:** Clean full-screen view without bottom tab obstruction; navigation handled exclusively via a responsive slide-out tactical drawer triggered from a header `MENU` button.
+  - **Wide Responsive Canvas:** Upgraded the main container from a constrained mobile box to an expansive `max-w-7xl` layout, allowing tables, veto matrices, and match banners to breathe with esports fidelity on 1080p+ displays.
+
+### Maps Tab & Optimal Squad Intelligence
+- **Dedicated Maps Module (`MapsTab.jsx`):**
+  - Segmented by competitive game mode: **Hardpoint**, **Search & Destroy**, and **Control**.
+  - Top mode KPI summary cards tracking active map pool counts, cumulative win rates, and win/loss records.
+  - Interactive mode filter pills (`ALL MODES`, `HARDPOINT`, `S&D`, `CONTROL`).
+- **Cinematic Map Banner Cards (`MapCard.jsx`):**
+  - Inspired by official esports broadcast match bars, displaying high-contrast map photography with dark vignette gradient overlays.
+  - Real-time performance metrics: Map win rate %, win/loss record, and average score differential (`+66 AVG DIFF`).
+  - Tactical map classification badge (`STRONGHOLD`, `CONTESTED`, `VULNERABLE`).
+- **Map Performance Index (MPI) Algorithm & Role Specialization (`mapsAnalytics.js`):**
+  - Resolved property naming mismatches that caused `NaN` selection scores and erratic lineup sorting.
+  - Top performers (e.g. `Spade>` on Takeoff) correctly lead the starting 5.
+  - Dynamic tactical role distribution across the 5 starters (*Primary Slayer*, *OBJ Anchor*, *Entry Fragger*, *Support Flex*, *Flex Operator*) with contextual selection rationale.
+  - Fixed blank stats formatting for average score, hill time, and games played.
+
+### Cinematic Match History Banners
+- **Banner-Style Match Cards (`MatchBannerCard.jsx`):** Redesigned the entire Match History list with wide, atmospheric map backdrop banners matching the user's reference inspiration:
+  - High-impact map name typography in bold uppercase display font with drop shadow.
+  - Top-left metadata row: Result badge (`WIN` in neon green / `LOSS` in red), mode, played date, opponent clan tag, and tier chip.
+  - Team score vs opponent score (`250 : 229`), our top performer's stats (`48 / 43 / 17 #2`), and prominent score differential (`+73` / `-33`).
+  - Click-to-expand drilldown for full team and opponent scoreboards, metadata editing, and 1-click graphic generation.
+
 ### Scrim Series Graphic Generator
 - **Multi-Map Esports Scrim Card (`ScrimCardModal.jsx`):** High-resolution (2400 × 1350 px, 16:9 Retina) canvas renderer generating broadcast-ready scrim summary graphics for Discord and Twitter/X embeds.
 - **Series Score & Progression Header:** Dynamically computes aggregate series outcome (`VICTORY 2-1`, `3-0`, etc.) with customizable Opponent Clan Tag, Our Team Name, and Series Format badges.

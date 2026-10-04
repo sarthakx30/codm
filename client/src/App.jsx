@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from './components/common/Header';
-import Navbar from './components/common/Navbar';
+import Sidebar from './components/common/Sidebar';
 import Toast from './components/common/Toast';
 import HonorsBanner from './components/overview/HonorsBanner';
 import RecordBox from './components/overview/RecordBox';
@@ -12,6 +12,7 @@ import SortBar from './components/players/SortBar';
 import PlayerCardsGrid from './components/players/PlayerCardsGrid';
 import PlayerTableView from './components/players/PlayerTableView';
 import MatchList from './components/matches/MatchList';
+import MapsTab from './components/maps/MapsTab';
 import BatchUploadModal from './components/upload/BatchUploadModal';
 import AliasManagerModal from './components/aliases/AliasManagerModal';
 import ScrimCardModal from './components/scrim/ScrimCardModal';
@@ -35,6 +36,7 @@ export default function App() {
   const [isWaking, setIsWaking] = useState(false);
   const [wakingMsg, setWakingMsg] = useState('');
   const [serverError, setServerError] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Modals for Scrim Graphic & Alias Manager
   const [isAliasModalOpen, setIsAliasModalOpen] = useState(false);
@@ -142,83 +144,111 @@ export default function App() {
   }, [filteredMatches, sortKey]);
 
   return (
-    <div className="max-w-2xl mx-auto px-3.5 py-4 pb-28 min-h-screen">
-      <Header
-        filter={filter}
-        onFilterChange={setFilter}
+    <div className="min-h-screen bg-[#080c14] text-[#f0f4f8] flex flex-col antialiased selection:bg-[#00e5ff]/20 selection:text-[#00e5ff]">
+      
+      {/* Responsive Unified Sidebar (Desktop persistent + Mobile drawer) */}
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={changeTab}
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
         isWaking={isWaking}
         wakingMsg={wakingMsg}
-        onRefresh={loadMatches}
-        loading={loading}
-        serverError={serverError}
+        matchCount={matches.length}
+        onOpenAliasModal={() => setIsAliasModalOpen(true)}
       />
 
-      {/* OVERVIEW TAB */}
-      {activeTab === 'overview' && (
-        <section className="animate-fadeIn">
-          <HonorsBanner honors={honors} />
-          <RecordBox record={tacticalIntel.record} />
-          <TacticalIntel slayMatrix={tacticalIntel.slayMatrix} clutch={tacticalIntel.clutch} />
-          <MapVetoTable vetoList={mapVetoList} />
-          <TierPerformance tierList={tierList} />
-          <OpponentList opponentList={opponentList} />
-        </section>
-      )}
-
-      {/* PLAYERS TAB */}
-      {activeTab === 'players' && (
-        <section className="animate-fadeIn">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-display text-white flex items-center gap-2 m-0">
-              <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
-              PLAYER PERFORMANCE ({playerStats.length})
-            </h2>
-            <button
-              type="button"
-              onClick={() => setIsAliasModalOpen(true)}
-              className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#ffb800] text-[#ffb800] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(255,184,0,0.15)]"
-            >
-              <Users size={13} />
-              <span>ROSTER & ALIASES</span>
-            </button>
-          </div>
-          <SortBar
-            sortKey={sortKey}
-            onSortChange={setSortKey}
-            viewMode={viewMode}
-            onViewModeToggle={() => setViewMode(v => v === 'cards' ? 'table' : 'cards')}
+      {/* Main Content Area: Expanded for Desktop (lg:pl-64 xl:pl-72) */}
+      <div className="flex-1 flex flex-col lg:pl-64 xl:pl-72 transition-all">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 pb-10 lg:pb-12">
+          
+          <Header
+            filter={filter}
+            onFilterChange={setFilter}
+            isWaking={isWaking}
+            wakingMsg={wakingMsg}
+            onRefresh={loadMatches}
+            loading={loading}
+            serverError={serverError}
+            onToggleMobileMenu={() => setIsMobileSidebarOpen(true)}
           />
-          {viewMode === 'cards' ? (
-            <PlayerCardsGrid players={playerStats} matches={filteredMatches} />
-          ) : (
-            <PlayerTableView players={playerStats} sortKey={sortKey} onSortChange={setSortKey} />
+
+          {/* OVERVIEW TAB */}
+          {activeTab === 'overview' && (
+            <section className="animate-fadeIn">
+              <HonorsBanner honors={honors} />
+              <RecordBox record={tacticalIntel.record} />
+              <TacticalIntel slayMatrix={tacticalIntel.slayMatrix} clutch={tacticalIntel.clutch} />
+              <MapVetoTable vetoList={mapVetoList} />
+              <TierPerformance tierList={tierList} />
+              <OpponentList opponentList={opponentList} />
+            </section>
           )}
-        </section>
-      )}
 
-      {/* MATCHES TAB */}
-      {activeTab === 'matches' && (
-        <section className="animate-fadeIn">
-          <MatchList
-            matches={filteredMatches}
-            onUpdateMatch={handleUpdateMatch}
-            onDeleteMatch={handleDeleteMatch}
-            onOpenScrimModal={handleOpenScrimModal}
-          />
-        </section>
-      )}
+          {/* MAPS TAB (NEW) */}
+          {activeTab === 'maps' && (
+            <section className="animate-fadeIn">
+              <MapsTab matches={filteredMatches} />
+            </section>
+          )}
 
-      {/* ADD MATCH TAB */}
-      {activeTab === 'add' && (
-        <section className="animate-fadeIn">
-          <BatchUploadModal
-            onMatchSaved={loadMatches}
-            showToast={showToast}
-            onOpenScrimModal={handleOpenScrimModal}
-            onOpenAliasModal={() => setIsAliasModalOpen(true)}
-          />
-        </section>
-      )}
+          {/* MATCHES TAB */}
+          {activeTab === 'matches' && (
+            <section className="animate-fadeIn">
+              <MatchList
+                matches={filteredMatches}
+                onUpdateMatch={handleUpdateMatch}
+                onDeleteMatch={handleDeleteMatch}
+                onOpenScrimModal={handleOpenScrimModal}
+              />
+            </section>
+          )}
+
+          {/* PLAYERS TAB */}
+          {activeTab === 'players' && (
+            <section className="animate-fadeIn">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-display text-white flex items-center gap-2 m-0">
+                  <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
+                  PLAYER PERFORMANCE ({playerStats.length})
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsAliasModalOpen(true)}
+                  className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#ffb800] text-[#ffb800] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(255,184,0,0.15)]"
+                >
+                  <Users size={13} />
+                  <span>ROSTER & ALIASES</span>
+                </button>
+              </div>
+              <SortBar
+                sortKey={sortKey}
+                onSortChange={setSortKey}
+                viewMode={viewMode}
+                onViewModeToggle={() => setViewMode(v => v === 'cards' ? 'table' : 'cards')}
+              />
+              {viewMode === 'cards' ? (
+                <PlayerCardsGrid players={playerStats} matches={filteredMatches} />
+              ) : (
+                <PlayerTableView players={playerStats} sortKey={sortKey} onSortChange={setSortKey} />
+              )}
+            </section>
+          )}
+
+          {/* ADD MATCH TAB */}
+          {activeTab === 'add' && (
+            <section className="animate-fadeIn">
+              <BatchUploadModal
+                onMatchSaved={loadMatches}
+                showToast={showToast}
+                onOpenScrimModal={handleOpenScrimModal}
+                onOpenAliasModal={() => setIsAliasModalOpen(true)}
+              />
+            </section>
+          )}
+
+        </main>
+      </div>
 
       {/* MODALS */}
       <AliasManagerModal
@@ -235,7 +265,7 @@ export default function App() {
         showToast={showToast}
       />
 
-      <Navbar activeTab={activeTab} onTabChange={changeTab} />
+
       <Toast message={toastMessage} />
     </div>
   );

@@ -76,15 +76,19 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
 
   const cur = queue[queueIndex];
 
-  const advanceQueue = (newlySavedMatch) => {
+  const advanceQueue = (newlySavedMatch, updatedQueue) => {
+    let nextSavedList = lastSavedBatch;
     if (newlySavedMatch) {
-      setLastSavedBatch(prev => [...prev, newlySavedMatch]);
+      nextSavedList = [...lastSavedBatch, newlySavedMatch];
+      setLastSavedBatch(nextSavedList);
     }
-    const nextIdx = queue.findIndex((q, i) => i > queueIndex && q.status !== 'saved');
+
+    const currentQ = updatedQueue || queue;
+    const nextIdx = currentQ.findIndex((q, i) => i > queueIndex && q.status !== 'saved');
     if (nextIdx !== -1) {
       setQueueIndex(nextIdx);
     } else {
-      const anyUnsaved = queue.findIndex(q => q.status !== 'saved');
+      const anyUnsaved = currentQ.findIndex(q => q.status !== 'saved');
       if (anyUnsaved !== -1) {
         setQueueIndex(anyUnsaved);
       } else {
@@ -124,8 +128,9 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
       showToast('Match saved.');
       if (onMatchSaved) onMatchSaved();
 
-      setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, status: 'saved' } : q));
-      advanceQueue(savedMatch || cur.match);
+      const updatedQueue = queue.map((q, i) => i === queueIndex ? { ...q, status: 'saved' } : q);
+      setQueue(updatedQueue);
+      advanceQueue(savedMatch || cur.match, updatedQueue);
     } catch (err) {
       alert(`Save failed: ${err.message}`);
     }
@@ -150,26 +155,57 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
         )}
       </div>
 
-      {/* Completion Banner if batch of 2+ matches just finished saving */}
-      {lastSavedBatch.length >= 2 && queue.length === 0 && (
-        <div className="bg-[#111723] border border-[#00e5ff] p-4 mb-4 clip-corner-sm flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-          <div>
-            <div className="text-white font-display font-bold text-sm flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-[#10b981]" />
-              <span>SCRIM SERIES SAVED ({lastSavedBatch.length} MAPS)</span>
+      {/* Completion Hero Banner when a series/batch of matches has been saved */}
+      {lastSavedBatch.length > 0 && queue.length === 0 && (
+        <div className="bg-[#0c111a] border-2 border-[#00e5ff] p-5 mb-5 clip-corner shadow-[0_0_30px_rgba(0,229,255,0.25)] animate-fadeIn">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="text-white font-display font-extrabold text-base flex items-center gap-2">
+                <CheckCircle2 size={18} className="text-[#10b981]" />
+                <span>
+                  SCRIM SERIES RECORDED // {lastSavedBatch.length} {lastSavedBatch.length === 1 ? 'MAP' : 'MAPS'} SAVED
+                </span>
+              </div>
+              <p className="text-xs font-mono-num text-[#7d90a6] m-0 mt-1">
+                Your match screenshots have been parsed and recorded. Generate your Discord/Twitter scrim graphic now.
+              </p>
+
+              {/* Map Summaries */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {lastSavedBatch.map((sm, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-[#111723] border border-[#223046] px-2.5 py-1 rounded text-[11px] font-mono-num flex items-center gap-1.5"
+                  >
+                    <span className="text-[#ffb800] font-bold">M{idx + 1}</span>
+                    <span className="text-white font-semibold">{sm.map || 'MAP'}</span>
+                    <span className="text-[#7d90a6] uppercase text-[10px]">{sm.mode || ''}</span>
+                    <span className={`font-bold ${sm.result === 'W' ? 'text-[#10b981]' : 'text-[#ff334b]'}`}>
+                      {sm.result === 'W' ? 'WIN' : 'LOSS'} ({sm.score_us || 0} - {sm.score_them || 0})
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-xs font-mono-num text-[#7d90a6] m-0 mt-0.5">
-              Generate a shareable cyber-themed esports match graphic for Discord or Twitter.
-            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLastSavedBatch([])}
+                className="px-3 py-2 text-xs font-mono-num text-[#7d90a6] hover:text-white transition-colors cursor-pointer"
+              >
+                Dismiss
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenScrimModal && onOpenScrimModal(lastSavedBatch)}
+                className="px-5 py-2.5 bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-extrabold text-xs tracking-wider clip-corner-sm flex items-center gap-2 transition-all shadow-[0_0_18px_rgba(0,229,255,0.45)] cursor-pointer whitespace-nowrap"
+              >
+                <Sparkles size={15} />
+                <span>GENERATE SCRIM GRAPHIC CARD</span>
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenScrimModal && onOpenScrimModal(lastSavedBatch)}
-            className="px-4 py-2 bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(0,229,255,0.4)] cursor-pointer whitespace-nowrap"
-          >
-            <Sparkles size={14} />
-            <span>GENERATE SCRIM CARD</span>
-          </button>
         </div>
       )}
 

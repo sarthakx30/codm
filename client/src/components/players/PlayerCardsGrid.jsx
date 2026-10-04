@@ -92,23 +92,28 @@ export default function PlayerCardsGrid({ players = [], matches = [] }) {
                 {highlights.best && (
                   <div
                     className="flex items-center gap-1.5 text-[10px] font-mono-num bg-[#00e5ff]/10 border border-[#00e5ff]/30 px-2 py-0.5 rounded-xs"
-                    title={`+${highlights.best.delta}% composite efficiency vs teammates on ${highlights.best.label}`}
+                    title={`+${highlights.best.delta}% composite efficiency vs teammates on ${highlights.best.label} (${highlights.best.played} games, min. 2 to qualify)`}
                   >
                     <span className="text-[#00e5ff] font-bold">STRONGHOLD:</span>
                     <span className="text-white font-medium truncate max-w-[130px]">{highlights.best.map}</span>
                     <span className="text-[#00e5ff] font-bold">+{highlights.best.delta}%</span>
+                    <span className="text-[#5a6b82] text-[9px]">({highlights.best.played}G)</span>
                   </div>
                 )}
                 {highlights.worst && (
                   <div
                     className="flex items-center gap-1.5 text-[10px] font-mono-num bg-[#ff334b]/10 border border-[#ff334b]/30 px-2 py-0.5 rounded-xs"
-                    title={`${highlights.worst.delta}% composite efficiency vs teammates on ${highlights.worst.label}`}
+                    title={`${highlights.worst.delta}% composite efficiency vs teammates on ${highlights.worst.label} (${highlights.worst.played} games, min. 2 to qualify)`}
                   >
                     <span className="text-[#ff334b] font-bold">VULNERABLE:</span>
                     <span className="text-white font-medium truncate max-w-[130px]">{highlights.worst.map}</span>
                     <span className="text-[#ff334b] font-bold">{highlights.worst.delta}%</span>
+                    <span className="text-[#5a6b82] text-[9px]">({highlights.worst.played}G)</span>
                   </div>
                 )}
+                <span className="text-[9px] font-mono-num text-[#5a6b82] hidden sm:inline ml-auto">
+                  *min. 2 games to qualify
+                </span>
               </div>
             )}
 
