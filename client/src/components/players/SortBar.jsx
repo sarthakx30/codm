@@ -1,5 +1,6 @@
 import React from 'react';
 import { LayoutGrid, Table } from 'lucide-react';
+import { THEME_CLASSES } from '../../config/theme';
 
 export const SORT_COLS = [
   { key: 'impact', label: 'Impact' },
@@ -27,7 +28,7 @@ export default function SortBar({ sortKey, onSortChange, viewMode, onViewModeTog
               onClick={() => onSortChange(col.key)}
               className={`px-2.5 py-1 text-xs font-display whitespace-nowrap transition-all border ${
                 isActive
-                  ? 'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/10 shadow-[0_0_8px_rgba(0,229,255,0.25)]'
+                  ? `${THEME_CLASSES.badgeGold} shadow-[0_0_10px_rgba(245,183,0,0.3)] font-bold`
                   : 'border-[#223046] text-[#7d90a6] bg-[#111723] hover:text-white'
               } clip-corner-sm`}
             >
@@ -40,7 +41,7 @@ export default function SortBar({ sortKey, onSortChange, viewMode, onViewModeTog
       {/* View Switcher Button */}
       <button
         onClick={onViewModeToggle}
-        className="flex items-center gap-1.5 px-2.5 py-1 bg-transparent border border-[#354b6d] text-xs font-display text-[#7d90a6] hover:text-white hover:border-[#00e5ff] transition-colors whitespace-nowrap"
+        className={`flex items-center gap-1.5 px-2.5 py-1 ${THEME_CLASSES.btnGhost} text-xs font-display whitespace-nowrap`}
       >
         {viewMode === 'cards' ? (
           <>

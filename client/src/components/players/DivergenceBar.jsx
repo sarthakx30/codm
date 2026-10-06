@@ -1,4 +1,5 @@
 import React from 'react';
+import { THEME_CLASSES } from '../../config/theme';
 
 /**
  * Visual Divergence Bar Component
@@ -25,13 +26,13 @@ export default function DivergenceBar({ delta = 0, rating = 100, tag = 'PAR', co
     ? `K/D: ${componentDeltas.kdDelta >= 0 ? '+' : ''}${componentDeltas.kdDelta}% | Score: ${componentDeltas.scoreDelta >= 0 ? '+' : ''}${componentDeltas.scoreDelta}% | Kills: ${componentDeltas.killsDelta >= 0 ? '+' : ''}${componentDeltas.killsDelta}%${componentDeltas.objDelta ? ` | OBJ: ${componentDeltas.objDelta >= 0 ? '+' : ''}${componentDeltas.objDelta}%` : ''}`
     : `Rating: ${rating} (vs 100 team baseline)`;
 
-  // Badge styling
+  // Badge styling from centralized theme
   const badgeColors = {
-    CARRY: 'bg-[#ffb800]/15 border-[#ffb800] text-[#ffb800]',
-    ANCHOR: 'bg-[#ffb800]/15 border-[#ffb800] text-[#ffb800]',
-    IMPACT: 'bg-[#00e5ff]/15 border-[#00e5ff] text-[#00e5ff]',
-    PAR: 'bg-white/5 border-[#7d90a6]/40 text-[#7d90a6]',
-    DRAG: 'bg-[#ff334b]/15 border-[#ff334b] text-[#ff334b]',
+    CARRY: THEME_CLASSES.badgeGold,
+    ANCHOR: THEME_CLASSES.badgeGold,
+    IMPACT: THEME_CLASSES.badgeCyan,
+    PAR: THEME_CLASSES.badgeNeutral,
+    DRAG: THEME_CLASSES.badgeLoss,
   };
 
   const badgeIcons = {
@@ -39,25 +40,23 @@ export default function DivergenceBar({ delta = 0, rating = 100, tag = 'PAR', co
     ANCHOR: '🛡️',
     IMPACT: '▲',
     PAR: '⚖️',
-    DRAG: '⚠️',
+    DRAG: '▲',
   };
 
   return (
     <div className="flex items-center gap-2 group/bar relative" title={tooltipText}>
       {/* Divergence Bar Track */}
-      <div className="w-24 sm:w-32 h-3.5 bg-[#080c14] border border-[#223046] relative rounded-xs overflow-hidden flex items-center shrink-0">
+      <div className="w-24 sm:w-32 h-3 sm:h-3.5 bg-[#080d18] border border-[#1e2a3c] relative rounded-[2px] overflow-hidden flex items-center shrink-0">
         {/* Center Parity Marker (0%) */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-[1.5px] bg-[#354b6d] z-10 -translate-x-1/2" />
+        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-[#354b6d] z-10 -translate-x-1/2" />
 
         {/* Positive Divergence (Right of Center) */}
         {isPositive && (
           <div
             className={`absolute left-1/2 top-0 bottom-0 transition-all duration-500 ${
-              isElite
-                ? 'bg-gradient-to-r from-[#00e5ff] to-[#ffb800] shadow-[0_0_8px_rgba(255,184,0,0.5)]'
-                : isAnchor
-                ? 'bg-gradient-to-r from-[#00e5ff] to-[#ffb800]'
-                : 'bg-gradient-to-r from-[#00e5ff]/70 to-[#00e5ff] shadow-[0_0_8px_rgba(0,229,255,0.4)]'
+              isElite || tag === 'CARRY'
+                ? 'bg-gradient-to-r from-[#f5b700] to-[#ffd700] shadow-[0_0_8px_rgba(255,215,0,0.5)]'
+                : 'bg-gradient-to-r from-[#00e5ff]/80 to-[#00e5ff] shadow-[0_0_8px_rgba(0,229,255,0.4)]'
             }`}
             style={{ width: `${widthPercent}%` }}
           />
@@ -66,7 +65,7 @@ export default function DivergenceBar({ delta = 0, rating = 100, tag = 'PAR', co
         {/* Negative Divergence (Left of Center) */}
         {isNegative && (
           <div
-            className="absolute right-1/2 top-0 bottom-0 bg-gradient-to-l from-[#ff334b]/70 to-[#ff334b] shadow-[0_0_8px_rgba(255,51,75,0.4)] transition-all duration-500"
+            className="absolute right-1/2 top-0 bottom-0 bg-gradient-to-l from-[#ff334b]/80 to-[#ff334b] shadow-[0_0_8px_rgba(255,51,75,0.4)] transition-all duration-500"
             style={{ width: `${widthPercent}%` }}
           />
         )}
@@ -81,7 +80,9 @@ export default function DivergenceBar({ delta = 0, rating = 100, tag = 'PAR', co
       <div className="flex items-center gap-1.5 min-w-[70px]">
         <span
           className={`font-mono-num text-[11px] font-bold ${
-            isPositive ? 'text-[#00e5ff]' : isNegative ? 'text-[#ff334b]' : 'text-[#7d90a6]'
+            isPositive
+              ? tag === 'CARRY' ? 'text-[#ffd700]' : 'text-[#00e5ff]'
+              : isNegative ? 'text-[#ff334b]' : 'text-[#7d90a6]'
           }`}
         >
           {delta >= 0 ? `+${delta}%` : `${delta}%`}

@@ -144,7 +144,7 @@ export default function App() {
   }, [filteredMatches, sortKey]);
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-[#f0f4f8] flex flex-col antialiased selection:bg-[#00e5ff]/20 selection:text-[#00e5ff]">
+    <div className="min-h-screen bg-[#080c14] text-[#f0f4f8] flex flex-col antialiased selection:bg-[#f5b700]/30 selection:text-[#ffd700]">
       
       {/* Responsive Unified Sidebar (Desktop persistent + Mobile drawer) */}
       <Sidebar
@@ -209,13 +209,13 @@ export default function App() {
             <section className="animate-fadeIn">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-display text-white flex items-center gap-2 m-0">
-                  <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
+                  <span className="w-1 h-3.5 bg-[#f5b700] inline-block"></span>
                   PLAYER PERFORMANCE ({playerStats.length})
                 </h2>
                 <button
                   type="button"
                   onClick={() => setIsAliasModalOpen(true)}
-                  className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#ffb800] text-[#ffb800] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(255,184,0,0.15)]"
+                  className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#f5b700] text-[#f5b700] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(245,183,0,0.15)]"
                 >
                   <Users size={13} />
                   <span>ROSTER & ALIASES</span>

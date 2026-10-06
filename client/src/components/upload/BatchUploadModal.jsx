@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { api } from '../../api/client';
 import { parseTier } from '../../engine/playerAnalytics';
+import { THEME_CLASSES } from '../../config/theme';
 import { UploadCloud, CheckCircle2, AlertTriangle, XCircle, ArrowRight, UserMinus, Users, Sparkles } from 'lucide-react';
 
 function shrinkImage(file) {
@@ -147,7 +148,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
           <button
             type="button"
             onClick={onOpenAliasModal}
-            className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#ffb800] text-[#ffb800] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(255,184,0,0.15)]"
+            className="px-2.5 py-1 bg-[#111723] hover:bg-[#161e2e] border border-[#354b6d] hover:border-[#f5b700] text-[#f5b700] text-xs font-display flex items-center gap-1.5 transition-all clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(245,183,0,0.15)]"
           >
             <Users size={13} />
             <span>ROSTER & ALIASES</span>
@@ -157,7 +158,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
 
       {/* Completion Hero Banner when a series/batch of matches has been saved */}
       {lastSavedBatch.length > 0 && queue.length === 0 && (
-        <div className="bg-[#0c111a] border-2 border-[#00e5ff] p-5 mb-5 clip-corner shadow-[0_0_30px_rgba(0,229,255,0.25)] animate-fadeIn">
+        <div className="bg-[#0c111a] border-2 border-[#f5b700] p-5 mb-5 clip-corner shadow-[0_0_30px_rgba(245,183,0,0.25)] animate-fadeIn">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="text-white font-display font-extrabold text-base flex items-center gap-2">
@@ -177,7 +178,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                     key={idx}
                     className="bg-[#111723] border border-[#223046] px-2.5 py-1 rounded text-[11px] font-mono-num flex items-center gap-1.5"
                   >
-                    <span className="text-[#ffb800] font-bold">M{idx + 1}</span>
+                    <span className="text-[#f5b700] font-bold">M{idx + 1}</span>
                     <span className="text-white font-semibold">{sm.map || 'MAP'}</span>
                     <span className="text-[#7d90a6] uppercase text-[10px]">{sm.mode || ''}</span>
                     <span className={`font-bold ${sm.result === 'W' ? 'text-[#10b981]' : 'text-[#ff334b]'}`}>
@@ -199,7 +200,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
               <button
                 type="button"
                 onClick={() => onOpenScrimModal && onOpenScrimModal(lastSavedBatch)}
-                className="px-5 py-2.5 bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-extrabold text-xs tracking-wider clip-corner-sm flex items-center gap-2 transition-all shadow-[0_0_18px_rgba(0,229,255,0.45)] cursor-pointer whitespace-nowrap"
+                className="px-5 py-2.5 bg-[#f5b700] hover:bg-[#ffd700] text-[#0a0d14] font-display font-extrabold text-xs tracking-wider clip-corner-sm flex items-center gap-2 transition-all shadow-[0_0_18px_rgba(245,183,0,0.45)] cursor-pointer whitespace-nowrap"
               >
                 <Sparkles size={15} />
                 <span>GENERATE SCRIM GRAPHIC CARD</span>
@@ -210,7 +211,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
       )}
 
       {/* File Dropzone */}
-      <div className="bg-[#111723] border-2 border-dashed border-[#354b6d] hover:border-[#00e5ff] transition-colors p-6 text-center clip-corner-sm mb-4">
+      <div className="bg-[#111723] border-2 border-dashed border-[#354b6d] hover:border-[#f5b700] transition-colors p-6 text-center clip-corner-sm mb-4">
         <input
           type="file"
           ref={fileInputRef}
@@ -219,7 +220,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
           onChange={e => handleFiles(e.target.files)}
           className="hidden"
         />
-        <UploadCloud size={36} className="mx-auto text-[#00e5ff] mb-2 drop-shadow-[0_0_8px_rgba(0,229,255,0.4)]" />
+        <UploadCloud size={36} className="mx-auto text-[#f5b700] mb-2 drop-shadow-[0_0_8px_rgba(245,183,0,0.4)]" />
         <p className="font-display text-lg text-white font-bold mb-1">SELECT SCREENSHOT(S)</p>
         <p className="text-xs text-[#7d90a6] font-mono-num mb-3">
           Upload one or multiple end-game Match Details scoreboard images
@@ -227,7 +228,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
         <button
           type="button"
           onClick={() => fileInputRef.current && fileInputRef.current.click()}
-          className="px-5 py-2 bg-[#00e5ff] text-[#080c14] font-display font-bold text-sm clip-corner-sm hover:brightness-110 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,229,255,0.3)]"
+          className="px-5 py-2 bg-[#f5b700] hover:bg-[#ffd700] text-[#0a0d14] font-display font-extrabold text-sm clip-corner-sm transition-all cursor-pointer shadow-[0_0_15px_rgba(245,183,0,0.35)]"
         >
           CHOOSE FILES
         </button>
@@ -238,7 +239,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
         <div className="bg-[#111723] border border-[#223046] p-3 mb-4 clip-corner-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono-num text-[#7d90a6] mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-[#00e5ff] font-display font-bold text-sm">
+              <span className="text-[#f5b700] font-display font-bold text-sm">
                 BATCH REVIEW ({queue.filter(q => q.status === 'saved').length}/{queue.length} SAVED)
               </span>
               <span>MATCH {queueIndex + 1} OF {queue.length}</span>
@@ -250,7 +251,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                   const matchesToShare = queue.map(q => q.match).filter(Boolean);
                   if (matchesToShare.length > 0) onOpenScrimModal(matchesToShare);
                 }}
-                className="px-2.5 py-1 bg-[#00e5ff]/15 hover:bg-[#00e5ff]/25 border border-[#00e5ff] text-[#00e5ff] text-xs font-display flex items-center gap-1 transition-all clip-corner-sm cursor-pointer"
+                className={`px-2.5 py-1 ${THEME_CLASSES.badgeGold} hover:bg-[#f5b700]/25 text-xs font-display flex items-center gap-1 transition-all clip-corner-sm cursor-pointer`}
               >
                 <Sparkles size={12} />
                 <span>GENERATE SCRIM CARD ({queue.filter(q => q.match).length})</span>
@@ -290,8 +291,8 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
         <div className="bg-[#111723] border border-[#223046] p-4 clip-corner shadow-xl">
           {cur.status === 'proc' && (
             <div className="text-center py-8">
-              <span className="inline-block w-4 h-4 rounded-full border-2 border-[#00e5ff] border-t-transparent animate-spin mb-2"></span>
-              <p className="font-display text-lg text-[#00e5ff] animate-pulse">
+              <span className="inline-block w-4 h-4 rounded-full border-2 border-[#f5b700] border-t-transparent animate-spin mb-2"></span>
+              <p className="font-display text-lg text-[#f5b700] animate-pulse">
                 ANALYZING SCREENSHOT #{queueIndex + 1}...
               </p>
             </div>
@@ -325,7 +326,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
               <button
                 type="button"
                 onClick={advanceQueue}
-                className="px-6 py-1.5 bg-[#00e5ff] text-[#080c14] font-display font-bold text-sm clip-corner-sm"
+                className="px-6 py-1.5 bg-[#f5b700] hover:bg-[#ffd700] text-[#0a0d14] font-display font-extrabold text-sm clip-corner-sm cursor-pointer shadow-[0_0_12px_rgba(245,183,0,0.3)]"
               >
                 NEXT MATCH <ArrowRight size={13} className="inline ml-1" />
               </button>
@@ -385,7 +386,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
 
               {/* Player Roster Editor */}
               <div>
-                <div className="text-xs font-display text-[#00e5ff] tracking-wider mb-2 font-bold">
+                <div className="text-xs font-display text-[#ffd700] tracking-wider mb-2 font-bold">
                   SQUAD PLAYERS & STATS
                 </div>
                 <div className="space-y-2">
@@ -403,7 +404,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                           onClick={() => handlePlayerChange(pIdx, 'mvp', !p.mvp)}
                           className={`px-2 py-0.5 text-xs font-display border cursor-pointer ${
                             p.mvp
-                              ? 'bg-[#ffb800] text-black border-[#ffb800] font-bold'
+                              ? 'bg-[#f5b700] text-black border-[#f5b700] font-bold'
                               : 'bg-transparent text-[#7d90a6] border-[#354b6d]'
                           }`}
                         >
@@ -458,21 +459,21 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                           />
                         </div>
                         <div>
-                          <span className="block text-[9px] text-[#ffb800]">TIME(S)</span>
+                          <span className="block text-[9px] text-[#ffd700]">TIME(S)</span>
                           <input
                             type="number"
                             value={p.time || 0}
                             onChange={e => handlePlayerChange(pIdx, 'time', parseInt(e.target.value) || 0)}
-                            className="w-full bg-[#080c14] border border-[#ffb800]/50 text-[#ffb800] text-xs text-center py-0.5"
+                            className="w-full bg-[#080c14] border border-[#f5b700]/50 text-[#ffd700] text-xs text-center py-0.5"
                           />
                         </div>
                         <div>
-                          <span className="block text-[9px] text-[#00e5ff]">IMPACT</span>
+                          <span className="block text-[9px] text-[#ffffff]">IMPACT</span>
                           <input
                             type="number"
                             value={p.impact}
                             onChange={e => handlePlayerChange(pIdx, 'impact', parseInt(e.target.value) || 0)}
-                            className="w-full bg-[#080c14] border border-[#00e5ff]/50 text-[#00e5ff] text-xs text-center py-0.5"
+                            className="w-full bg-[#080c14] border border-white/40 text-white text-xs text-center py-0.5"
                           />
                         </div>
                       </div>
@@ -543,7 +544,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                             }}
                             className={`flex-1 py-0.5 text-[11px] font-display border ${
                               isActive
-                                ? 'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/15'
+                                ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15'
                                 : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
                             }`}
                           >
@@ -570,7 +571,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                           }}
                           className={`flex-1 py-1 font-display text-xs border capitalize ${
                             isActive
-                              ? 'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/15'
+                              ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15'
                               : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
                           }`}
                         >
@@ -587,14 +588,14 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                 <button
                   type="button"
                   onClick={handleSaveCurrent}
-                  className="flex-1 py-2 bg-[#00e5ff] text-[#080c14] font-display font-bold text-sm clip-corner-sm hover:brightness-110 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,229,255,0.3)]"
+                  className={`flex-1 py-2 ${THEME_CLASSES.btnPrimary} text-sm clip-corner-sm cursor-pointer`}
                 >
                   {cur.duplicate ? 'SAVE ANYWAY' : 'SAVE MATCH'}
                 </button>
                 <button
                   type="button"
                   onClick={advanceQueue}
-                  className="px-4 py-2 border border-[#354b6d] text-white font-display text-sm hover:border-white clip-corner-sm cursor-pointer"
+                  className={`px-4 py-2 ${THEME_CLASSES.btnSecondary} text-sm clip-corner-sm cursor-pointer`}
                 >
                   SKIP
                 </button>
@@ -602,7 +603,7 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
                   <button
                     type="button"
                     onClick={() => setQueue([])}
-                    className="px-4 py-2 border border-[#ff334b] text-[#ff334b] hover:bg-[#ff334b]/15 font-display text-sm clip-corner-sm cursor-pointer"
+                    className={`px-4 py-2 ${THEME_CLASSES.badgeLoss} hover:bg-[#ff334b]/25 font-display text-sm clip-corner-sm cursor-pointer`}
                   >
                     CANCEL ALL
                   </button>

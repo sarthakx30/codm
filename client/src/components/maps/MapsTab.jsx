@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import MapCard from './MapCard';
 import { calculateMapsIntel } from '../../engine/mapsAnalytics';
+import { THEME_CLASSES } from '../../config/theme';
 import { Compass, Flame, Target, Shield, Filter } from 'lucide-react';
 
 export default function MapsTab({ matches = [] }) {
@@ -52,7 +53,7 @@ export default function MapsTab({ matches = [] }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#223046] pb-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 flex items-center gap-2.5">
-            <span className="w-1.5 h-5 bg-[#00e5ff] inline-block shadow-[0_0_8px_rgba(0,229,255,0.6)]"></span>
+            <span className="w-1.5 h-5 bg-primary inline-block shadow-[0_0_8px_rgba(245,183,0,0.6)]"></span>
             MAP POOLS & SQUAD INTEL
             <span className="text-xs font-mono-num font-normal text-[#7d90a6] bg-[#111723] px-2 py-0.5 rounded border border-[#223046]">
               {mapsIntel.length} MAPS RECORDED
@@ -73,7 +74,7 @@ export default function MapsTab({ matches = [] }) {
                 onClick={() => setSelectedMode(pill.id)}
                 className={`px-3 py-1 text-xs font-display transition-all cursor-pointer rounded-xs flex items-center gap-1.5 ${
                   isActive
-                    ? 'bg-[#00e5ff] text-[#080c14] font-bold shadow-[0_0_8px_rgba(0,229,255,0.3)]'
+                    ? THEME_CLASSES.btnPrimary
                     : 'text-[#7d90a6] hover:text-white'
                 }`}
               >
@@ -119,7 +120,7 @@ export default function MapsTab({ matches = [] }) {
         {/* Search & Destroy Summary */}
         <div className="bg-[#111723] border border-[#223046] p-3.5 clip-corner-sm flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#00e5ff]/10 border border-[#00e5ff]/30 flex items-center justify-center text-[#00e5ff]">
+            <div className="w-8 h-8 rounded bg-[#f5b700]/10 border border-[#f5b700]/30 flex items-center justify-center text-[#f5b700]">
               <Target size={16} />
             </div>
             <div>
@@ -132,7 +133,7 @@ export default function MapsTab({ matches = [] }) {
             </div>
           </div>
           <div className="text-right font-mono-num text-xs">
-            <span className="text-[#00e5ff] font-bold text-base block">
+            <span className="text-[#ffd700] font-bold text-base block">
               {modeStats['SEARCH & DESTROY'].total > 0
                 ? `${Math.round((modeStats['SEARCH & DESTROY'].wins / modeStats['SEARCH & DESTROY'].total) * 100)}%`
                 : '0%'}
@@ -195,7 +196,7 @@ export default function MapsTab({ matches = [] }) {
         {(selectedMode === 'ALL' || selectedMode === 'SEARCH & DESTROY') && sndMaps.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <Target size={18} className="text-[#00e5ff]" />
+              <Target size={18} className="text-[#f5b700]" />
               <h3 className="font-display font-extrabold text-lg text-white tracking-wider m-0">
                 SEARCH & DESTROY MAP ROTATION ({sndMaps.length})
               </h3>

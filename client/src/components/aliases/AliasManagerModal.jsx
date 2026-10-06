@@ -14,6 +14,7 @@ import {
   Sparkles,
   RefreshCw
 } from 'lucide-react';
+import { THEME_CLASSES } from '../../config/theme';
 
 export default function AliasManagerModal({ isOpen, onClose, matches = [], onAliasesUpdated }) {
   const [aliases, setAliases] = useState([]);
@@ -202,7 +203,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
         {/* Header */}
         <div className="p-4 border-b border-[#223046] flex items-center justify-between bg-[#111723]/90">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#ffb800]/10 border border-[#ffb800]/30 flex items-center justify-center text-[#ffb800]">
+            <div className="w-8 h-8 rounded bg-[#f5b700]/10 border border-[#f5b700]/30 flex items-center justify-center text-[#f5b700]">
               <Users size={18} />
             </div>
             <div>
@@ -241,7 +242,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
           
           {/* Quick Add Alias Form */}
           <div className="bg-[#111723] border border-[#223046] p-3.5 clip-corner-sm">
-            <div className="flex items-center gap-1.5 text-xs font-display text-[#00e5ff] font-bold tracking-wider mb-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-display text-[#ffd700] font-bold tracking-wider mb-2.5">
               <Sparkles size={14} />
               <span>MAP NEW ALIAS VARIATION</span>
             </div>
@@ -256,7 +257,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                   value={inputRaw}
                   onChange={e => setInputRaw(e.target.value)}
                   placeholder="e.g. HZN Spade or spade.exe"
-                  className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#00e5ff] text-white px-2.5 py-1.5 rounded-sm outline-none transition-colors"
+                  className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#f5b700] text-white px-2.5 py-1.5 rounded-sm outline-none transition-colors"
                 />
               </div>
 
@@ -273,7 +274,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                 <select
                   value={selectedCanonical}
                   onChange={e => setSelectedCanonical(e.target.value)}
-                  className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#ffb800] text-white px-2.5 py-1.5 rounded-sm outline-none transition-colors"
+                  className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#f5b700] text-white px-2.5 py-1.5 rounded-sm outline-none transition-colors"
                 >
                   <option value="">Select Existing Player...</option>
                   {allCanonicalNames.map(name => (
@@ -287,7 +288,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                     value={customCanonical}
                     onChange={e => setCustomCanonical(e.target.value)}
                     placeholder="Enter Canonical Name"
-                    className="w-full mt-1.5 bg-[#080c14] border border-[#ffb800] text-[#ffb800] px-2.5 py-1 rounded-sm outline-none"
+                    className="w-full mt-1.5 bg-[#080c14] border border-[#f5b700] text-[#ffd700] px-2.5 py-1 rounded-sm outline-none"
                     autoFocus
                   />
                 )}
@@ -302,7 +303,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                     const canonical = selectedCanonical === '__NEW__' ? customCanonical : selectedCanonical;
                     handleAddAlias(inputRaw, canonical);
                   }}
-                  className="w-full bg-[#ffb800] hover:bg-[#e0a200] disabled:opacity-40 disabled:pointer-events-none text-black font-display font-bold py-1.5 px-3 rounded-sm flex items-center justify-center gap-1 transition-all cursor-pointer shadow-[0_0_10px_rgba(255,184,0,0.2)]"
+                  className={`w-full ${THEME_CLASSES.btnPrimary} text-xs py-1.5 px-3 rounded-sm flex items-center justify-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none`}
                 >
                   <Plus size={14} />
                   <span>MAP</span>
@@ -319,7 +320,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                 onClick={() => setActiveSubTab('roster')}
                 className={`px-3 py-1.5 text-xs font-display tracking-wider border transition-all flex items-center gap-1.5 ${
                   activeSubTab === 'roster'
-                    ? 'border-[#ffb800] text-[#ffb800] bg-[#ffb800]/10 font-bold'
+                    ? `${THEME_CLASSES.badgeGold} font-bold`
                     : 'border-[#223046] text-[#7d90a6] hover:text-white'
                 }`}
               >
@@ -331,7 +332,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                 onClick={() => setActiveSubTab('unmapped')}
                 className={`px-3 py-1.5 text-xs font-display tracking-wider border transition-all flex items-center gap-1.5 ${
                   activeSubTab === 'unmapped'
-                    ? 'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/10 font-bold'
+                    ? `${THEME_CLASSES.badgeGold} font-bold`
                     : 'border-[#223046] text-[#7d90a6] hover:text-white'
                 }`}
               >
@@ -359,7 +360,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
             <div className="space-y-2.5">
               {loading ? (
                 <div className="text-center py-8 text-[#7d90a6] font-mono-num text-xs flex items-center justify-center gap-2">
-                  <RefreshCw size={14} className="animate-spin text-[#00e5ff]" />
+                  <RefreshCw size={14} className="animate-spin text-[#f5b700]" />
                   <span>Loading alias database...</span>
                 </div>
               ) : filteredGroups.length === 0 ? (
@@ -374,7 +375,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#ffb800]" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#f5b700]" />
                         <span className="font-display font-bold text-white text-sm tracking-wide">
                           {group.canonical}
                         </span>
@@ -388,7 +389,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                           setSelectedCanonical(group.canonical);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
-                        className="text-[11px] font-display text-[#00e5ff] hover:underline flex items-center gap-1"
+                        className="text-[11px] font-display text-[#f5b700] hover:text-[#ffd700] hover:underline flex items-center gap-1"
                       >
                         <Plus size={11} />
                         <span>Add Alias</span>
@@ -430,7 +431,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
           {activeSubTab === 'unmapped' && (
             <div className="space-y-2">
               <div className="bg-[#111723] border border-[#223046] p-3 text-xs font-mono-num text-[#7d90a6] flex items-start gap-2">
-                <Shield size={16} className="text-[#00e5ff] mt-0.5 flex-shrink-0" />
+                <Shield size={16} className="text-[#f5b700] mt-0.5 flex-shrink-0" />
                 <div>
                   <span className="text-white font-bold">Unassigned Match Names:</span> These are gamertags recorded in your match history that haven't been mapped to a canonical player yet. Link them below to combine their stats!
                 </div>
@@ -449,7 +450,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-white font-bold">{item.name}</span>
-                      <span className="text-[10px] text-[#ffb800] bg-[#ffb800]/10 px-1.5 py-0.5 rounded border border-[#ffb800]/20">
+                      <span className="text-[10px] text-[#ffd700] bg-[#f5b700]/10 px-1.5 py-0.5 rounded border border-[#f5b700]/30">
                         {item.count} {item.count === 1 ? 'match' : 'matches'}
                       </span>
                     </div>
@@ -468,7 +469,7 @@ export default function AliasManagerModal({ isOpen, onClose, matches = [], onAli
                       <button
                         type="button"
                         onClick={() => handleQuickMap(item.name)}
-                        className="bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-bold px-2.5 py-1 rounded-sm flex items-center gap-1 transition-all cursor-pointer shadow-[0_0_8px_rgba(0,229,255,0.2)]"
+                        className="bg-[#f5b700] hover:bg-[#ffd700] text-[#0a0d14] font-display font-extrabold px-2.5 py-1 rounded-sm flex items-center gap-1 transition-all cursor-pointer shadow-[0_0_8px_rgba(245,183,0,0.3)]"
                       >
                         <ArrowRight size={12} />
                         <span>LINK</span>

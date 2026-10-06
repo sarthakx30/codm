@@ -7,11 +7,11 @@ export default function PlayerTableView({ players = [], sortKey, onSortChange })
   }
 
   return (
-    <div className="overflow-x-auto border border-[#223046] bg-[#111723] clip-corner-sm mb-6">
+    <div className="overflow-x-auto border border-[#1a2438] bg-[#0b101b] clip-corner-sm mb-6 shadow-xl">
       <table className="w-full text-right font-mono-num text-xs border-collapse min-w-[620px]">
         <thead>
-          <tr className="border-b border-[#223046] text-[#7d90a6] bg-[#0c111a]/80">
-            <th className="py-2.5 px-3 text-left font-semibold sticky left-0 bg-[#0c111a] z-10">
+          <tr className="border-b border-[#1f2b3e] text-[#7d90a6] bg-[#080d18]">
+            <th className="py-2.5 px-3 text-left font-semibold sticky left-0 bg-[#080d18] z-10">
               PLAYER
             </th>
             {SORT_COLS.map(c => {
@@ -21,7 +21,7 @@ export default function PlayerTableView({ players = [], sortKey, onSortChange })
                   key={c.key}
                   onClick={() => onSortChange(c.key)}
                   className={`py-2.5 px-2 font-semibold cursor-pointer select-none transition-colors hover:text-white ${
-                    isSorted ? 'text-[#00e5ff] shadow-[inset_0_-2px_#00e5ff]' : ''
+                    isSorted ? 'text-secondary shadow-[inset_0_-2px_var(--color-primary)] font-bold' : ''
                   }`}
                 >
                   {c.label}
@@ -42,12 +42,12 @@ export default function PlayerTableView({ players = [], sortKey, onSortChange })
                 <td className="py-2.5 px-2 font-bold text-white">{p.kd.toFixed(2)}</td>
                 <td className="py-2.5 px-2 text-[#f0f4f8]">{p.kpm.toFixed(1)}</td>
                 <td className="py-2.5 px-2 text-[#f0f4f8]">{Math.round(p.killShare)}%</td>
-                <td className="py-2.5 px-2 text-[#ffb800]">{Math.round(p.objShare)}%</td>
-                <td className={`py-2.5 px-2 font-bold ${p.netSpread >= 0 ? 'text-[#00e5ff]' : 'text-[#ff334b]'}`}>
+                <td className="py-2.5 px-2 text-primary">{Math.round(p.objShare)}%</td>
+                <td className={`py-2.5 px-2 font-bold ${p.netSpread >= 0 ? 'text-win' : 'text-loss'}`}>
                   {netSign}{p.netSpread}
                 </td>
                 <td className="py-2.5 px-2 text-[#f0f4f8]">{Math.round(p.score)}</td>
-                <td className="py-2.5 px-2 font-bold text-[#ffb800]">{p.mvp}</td>
+                <td className="py-2.5 px-2 font-bold text-secondary">{p.mvp}</td>
                 <td className="py-2.5 px-2 text-white font-bold">{Math.round(p.win)}%</td>
                 <td className="py-2.5 px-2 text-[#7d90a6]">{p.games}</td>
               </tr>

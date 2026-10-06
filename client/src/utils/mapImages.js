@@ -15,6 +15,8 @@
  *   client/public/maps/standoff.jpg
  */
 
+import { PALETTE } from '../config/theme';
+
 // Normalized slugs for common competitive CODM maps
 const MAP_SLUG_MAP = {
   'combine': 'combine',
@@ -93,9 +95,9 @@ const MAP_THEMES = {
 };
 
 const DEFAULT_THEME = {
-  primary: '#00e5ff',
-  gradient: 'from-[#162133] via-[#0d1522] to-[#06090e]',
-  accent: '#00e5ff'
+  primary: PALETTE.primary,
+  gradient: 'from-[#1c1608] via-[#120f06] to-[#070603]',
+  accent: PALETTE.secondary
 };
 
 /**

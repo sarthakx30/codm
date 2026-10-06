@@ -1,7 +1,8 @@
 import React from 'react';
-import { getMapMetadata } from '../../utils/mapImages';
+import MapBannerBackdrop from '../common/MapBannerBackdrop';
 import ScoreboardTable from './ScoreboardTable';
 import { parseTier } from '../../engine/playerAnalytics';
+import { THEME_CLASSES, PALETTE } from '../../config/theme';
 import {
   Trophy,
   Save,
@@ -38,9 +39,6 @@ export default function MatchBannerCard({
   };
   const pt = parseTier(currentEdit.tier);
 
-  // Map image and fallback theme
-  const mapMeta = getMapMetadata(m.map);
-
   // Top performer or MVP on our team
   const sortedPlayers = (m.us || []).slice().sort((a, b) => (b.score || 0) - (a.score || 0));
   const topPlayer = sortedPlayers[0] || null;
@@ -67,9 +65,9 @@ export default function MatchBannerCard({
     <div
       className={`border transition-all clip-corner relative overflow-hidden group shadow-lg ${
         isSelected
-          ? 'border-[#00e5ff] shadow-[0_0_20px_rgba(0,229,255,0.3)]'
+          ? 'border-[#f5b700] shadow-[0_0_20px_rgba(245,183,0,0.35)]'
           : isWin
-          ? 'border-[#223046] hover:border-[#00e5ff]/60'
+          ? 'border-[#223046] hover:border-[#f5b700]/60'
           : 'border-[#223046] hover:border-[#ff334b]/60'
       }`}
     >
@@ -81,34 +79,16 @@ export default function MatchBannerCard({
         }}
         className="relative min-h-[96px] sm:min-h-[110px] p-4 flex items-center justify-between cursor-pointer select-none overflow-hidden"
       >
-        {/* Background Map Image with Fallback Gradient */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={mapMeta.imageUrl}
-            alt={m.map}
-            className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => {
-              // Graceful fallback to styled tactical gradient if image is not on disk yet
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          {/* Fallback procedural gradient */}
-          <div className={`absolute inset-0 bg-gradient-to-r ${mapMeta.theme.gradient} -z-10`} />
-
-          {/* Vignette Overlay for Crisp Readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#06090e]/95 via-[#06090e]/75 to-[#06090e]/90" />
-          <div className="absolute inset-0 bg-black/30" />
-        </div>
-
-        {/* Left Result Accent Bar */}
-        <div
-          className={`absolute left-0 top-0 bottom-0 w-1.5 z-10 ${
+        {/* Shared Map Backdrop and Left Status Accent */}
+        <MapBannerBackdrop
+          mapName={m.map}
+          accentClass={
             isSelected
-              ? 'bg-[#00e5ff] shadow-[0_0_12px_#00e5ff]'
+              ? 'bg-[#f5b700] shadow-[0_0_12px_#f5b700]'
               : isWin
               ? 'bg-[#10b981] shadow-[0_0_10px_rgba(16,185,129,0.5)]'
               : 'bg-[#ff334b] shadow-[0_0_10px_rgba(255,51,75,0.5)]'
-          }`}
+          }
         />
 
         {/* Content Container */}
@@ -117,9 +97,9 @@ export default function MatchBannerCard({
           {/* Left: Checkbox (in select mode) + Metadata + Map Name */}
           <div className="flex items-center gap-3">
             {isSelectMode && (
-              <div className="text-[#00e5ff] flex items-center justify-center pl-1">
+              <div className="text-[#f5b700] flex items-center justify-center pl-1">
                 {isSelected ? (
-                  <CheckSquare size={20} className="text-[#00e5ff]" />
+                  <CheckSquare size={20} className="text-[#f5b700]" />
                 ) : (
                   <Square size={20} className="text-[#7d90a6]" />
                 )}
@@ -131,9 +111,7 @@ export default function MatchBannerCard({
               <div className="flex items-center gap-2 text-xs font-mono-num mb-1 flex-wrap">
                 <span
                   className={`font-bold tracking-wider px-1.5 py-0.2 rounded-xs text-[11px] ${
-                    isWin
-                      ? 'bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40'
-                      : 'bg-[#ff334b]/20 text-[#ff334b] border border-[#ff334b]/40'
+                    isWin ? THEME_CLASSES.badgeWin : THEME_CLASSES.badgeLoss
                   }`}
                 >
                   {isWin ? 'WIN' : 'LOSS'}
@@ -147,12 +125,12 @@ export default function MatchBannerCard({
                   </span>
                 )}
                 {m.opponent && (
-                  <span className="text-[#ffb800] font-bold">
+                  <span className="text-primary font-bold">
                     VS {m.opponent.toUpperCase()}
                   </span>
                 )}
                 {m.tier && (
-                  <span className="bg-[#ffb800]/15 text-[#ffb800] border border-[#ffb800]/40 px-1 text-[10px]">
+                  <span className={`${THEME_CLASSES.badgeGold} px-1 text-[10px]`}>
                     {m.tier}
                   </span>
                 )}
@@ -227,8 +205,8 @@ export default function MatchBannerCard({
           {/* Rosters */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             <div>
-              <div className="text-xs font-display text-[#00e5ff] font-bold tracking-wider mb-1.5 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00e5ff]" />
+              <div className="text-xs font-display text-[#f5b700] font-bold tracking-wider mb-1.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f5b700]" />
                 OUR TEAM ROSTER ({m.us?.length || 0})
               </div>
               <ScoreboardTable players={m.us} team="us" />
@@ -245,7 +223,7 @@ export default function MatchBannerCard({
 
           {/* Match Metadata & Actions Bar */}
           <div className="bg-[#161e2e] border border-[#223046] p-3.5 clip-corner-sm">
-            <div className="text-xs font-display text-[#00e5ff] tracking-wider mb-2.5 font-bold">
+            <div className="text-xs font-display text-[#ffd700] tracking-wider mb-2.5 font-bold">
               EDIT MATCH METADATA
             </div>
 
@@ -258,7 +236,7 @@ export default function MatchBannerCard({
                   value={currentEdit.opponent}
                   onChange={e => onFieldChange(m.id, 'opponent', e.target.value)}
                   placeholder="e.g. Luminosity"
-                  className="w-full bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm focus:outline-none focus:border-[#00e5ff]"
+                  className="w-full bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm focus:outline-none focus:border-[#f5b700]"
                 />
               </div>
 
@@ -266,7 +244,7 @@ export default function MatchBannerCard({
               <div>
                 <div className="flex justify-between items-center text-[#7d90a6] mb-1">
                   <span>Opponent Tier</span>
-                  <span className="text-[#ffb800] font-bold">{currentEdit.tier || 'None'}</span>
+                  <span className="text-[#f5b700] font-bold">{currentEdit.tier || 'None'}</span>
                 </div>
                 <div className="flex gap-1 mb-1">
                   {['T1', 'T2', 'T3', ''].map(val => {
@@ -281,7 +259,7 @@ export default function MatchBannerCard({
                         }}
                         className={`flex-1 py-1 font-display text-xs border ${
                           isActive
-                            ? 'border-[#ffb800] text-[#ffb800] bg-[#ffb800]/15'
+                            ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15 font-bold'
                             : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
                         }`}
                       >
@@ -307,7 +285,7 @@ export default function MatchBannerCard({
                         }
                         className={`flex-1 py-1 font-display text-xs border uppercase ${
                           isActive
-                            ? 'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/15'
+                            ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15 font-bold'
                             : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
                         }`}
                       >
@@ -324,7 +302,7 @@ export default function MatchBannerCard({
               <button
                 type="button"
                 onClick={() => onSave(m.id)}
-                className="flex-1 sm:flex-initial px-4 py-1.5 bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,229,255,0.25)]"
+                className={`flex-1 sm:flex-initial px-4 py-1.5 ${THEME_CLASSES.btnPrimary} text-xs clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
               >
                 <Save size={13} />
                 <span>SAVE DETAILS</span>
@@ -333,7 +311,7 @@ export default function MatchBannerCard({
               <button
                 type="button"
                 onClick={() => onOpenScrimModal && onOpenScrimModal([m])}
-                className="flex-1 sm:flex-initial px-4 py-1.5 border border-[#ffb800]/60 hover:bg-[#ffb800]/15 text-[#ffb800] font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-[0_0_10px_rgba(255,184,0,0.15)]"
+                className={`flex-1 sm:flex-initial px-4 py-1.5 ${THEME_CLASSES.badgeGold} hover:bg-[#f5b700]/25 font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
               >
                 <Sparkles size={13} />
                 <span>SHARE GRAPHIC</span>
@@ -342,7 +320,7 @@ export default function MatchBannerCard({
               <button
                 type="button"
                 onClick={() => onDelete(m.id)}
-                className="px-3 py-1.5 border border-[#ff334b]/60 hover:bg-[#ff334b]/15 text-[#ff334b] font-display text-xs clip-corner-sm transition-all cursor-pointer ml-auto"
+                className={`px-3 py-1.5 ${THEME_CLASSES.badgeLoss} hover:bg-[#ff334b]/25 font-display text-xs clip-corner-sm transition-all cursor-pointer ml-auto`}
                 title="Delete Match"
               >
                 <Trash2 size={13} />

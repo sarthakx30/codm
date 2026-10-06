@@ -11,6 +11,7 @@ import {
   Calendar,
   Layers
 } from 'lucide-react';
+import { PALETTE, THEME_CLASSES } from '../../config/theme';
 
 export default function ScrimCardModal({
   isOpen,
@@ -148,8 +149,8 @@ export default function ScrimCardModal({
 
     // Glowing corner accents & decorative border
     const isSeriesWin = wins > losses;
-    const accentColor = isSeriesWin ? '#00e5ff' : '#ff334b';
-    const goldColor = '#ffb800';
+    const accentColor = isSeriesWin ? PALETTE.primaryBright : PALETTE.loss;
+    const goldColor = PALETTE.primary;
 
     ctx.strokeStyle = 'rgba(53, 75, 109, 0.4)';
     ctx.lineWidth = 2;
@@ -259,7 +260,7 @@ export default function ScrimCardModal({
     mapProgression.forEach((m, idx) => {
       const cardX = 80 + idx * (cardW + gap);
       const isWin = m.result === 'WIN';
-      const mAccent = isWin ? '#00e5ff' : '#ff334b';
+      const mAccent = isWin ? '#ffd700' : '#ff334b';
 
       // Card BG
       ctx.fillStyle = '#111723';
@@ -279,7 +280,7 @@ export default function ScrimCardModal({
       ctx.fillText(`MAP ${m.gameNum}`, cardX + 20, mapY + 30);
 
       // Result Pill
-      ctx.fillStyle = isWin ? 'rgba(0, 229, 255, 0.15)' : 'rgba(255, 51, 75, 0.15)';
+      ctx.fillStyle = isWin ? 'rgba(245, 183, 0, 0.15)' : 'rgba(255, 51, 75, 0.15)';
       ctx.fillRect(cardX + cardW - 75, mapY + 12, 60, 24);
       ctx.strokeStyle = mAccent;
       ctx.lineWidth = 1;
@@ -300,7 +301,7 @@ export default function ScrimCardModal({
       ctx.fillText(m.mode.toUpperCase(), cardX + 20, mapY + 92);
 
       // Score
-      ctx.fillStyle = isWin ? '#00e5ff' : '#f0f4f8';
+      ctx.fillStyle = isWin ? '#ffd700' : '#f0f4f8';
       ctx.font = '700 36px "Teko", sans-serif';
       ctx.fillText(`${m.scoreUs} - ${m.scoreThem}`, cardX + 20, mapY + 135);
 
@@ -404,7 +405,7 @@ export default function ScrimCardModal({
       ctx.fillText(p.maps.toString(), 440, rY + 43);
 
       // 3. Kills
-      ctx.fillStyle = '#00e5ff';
+      ctx.fillStyle = '#ffffff';
       ctx.font = '700 26px "Teko", sans-serif';
       ctx.fillText(p.kills.toString(), 550, rY + 43);
 
@@ -415,7 +416,7 @@ export default function ScrimCardModal({
 
       // 5. K/D Ratio
       const kdNum = parseFloat(p.kd);
-      ctx.fillStyle = kdNum >= 1.5 ? goldColor : kdNum >= 1.0 ? '#00e5ff' : '#a0aec0';
+      ctx.fillStyle = kdNum >= 1.5 ? goldColor : kdNum >= 1.0 ? '#ffffff' : '#a0aec0';
       ctx.font = '700 26px "Teko", sans-serif';
       ctx.fillText(p.kd, 800, rY + 43);
 
@@ -438,7 +439,7 @@ export default function ScrimCardModal({
       ctx.fillText(p.score.toLocaleString(), 1210, rY + 43);
 
       // 9. Avg Impact
-      ctx.fillStyle = '#00e5ff';
+      ctx.fillStyle = '#ffd700';
       ctx.font = '700 26px "Teko", sans-serif';
       ctx.fillText(p.avgImpact.toString(), 1380, rY + 43);
     });
@@ -486,7 +487,7 @@ export default function ScrimCardModal({
       ctx.font = '700 14px "Share Tech Mono", monospace';
       ctx.fillText('TOTAL KILLS', spotlightX + 45, statBoxY + 30);
 
-      ctx.fillStyle = '#00e5ff';
+      ctx.fillStyle = '#ffd700';
       ctx.font = '800 52px "Teko", sans-serif';
       ctx.fillText(seriesMvp.kills.toString(), spotlightX + 45, statBoxY + 85);
 
@@ -526,7 +527,7 @@ export default function ScrimCardModal({
       ctx.font = '700 14px "Share Tech Mono", monospace';
       ctx.fillText('AVG IMPACT', spotlightX + 45 + statBoxW + 20, statBoxY2 + 30);
 
-      ctx.fillStyle = '#00e5ff';
+      ctx.fillStyle = '#ffd700';
       ctx.font = '800 52px "Teko", sans-serif';
       ctx.fillText(seriesMvp.avgImpact.toString(), spotlightX + 45 + statBoxW + 20, statBoxY2 + 85);
 
@@ -622,13 +623,13 @@ export default function ScrimCardModal({
         {/* Modal Header */}
         <div className="p-4 border-b border-[#223046] flex items-center justify-between bg-[#111723]/95">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#00e5ff]/10 border border-[#00e5ff]/30 flex items-center justify-center text-[#00e5ff]">
+            <div className="w-8 h-8 rounded bg-[#f5b700]/10 border border-[#f5b700]/30 flex items-center justify-center text-[#f5b700]">
               <Swords size={18} />
             </div>
             <div>
               <h2 className="text-base font-display font-bold text-white tracking-wider m-0 flex items-center gap-2">
                 SCRIM SERIES GRAPHIC GENERATOR
-                <span className="text-[10px] font-mono-num bg-[#ffb800]/15 text-[#ffb800] px-1.5 py-0.5 rounded border border-[#ffb800]/30">
+                <span className="text-[10px] font-mono-num bg-[#f5b700]/15 text-[#ffd700] px-1.5 py-0.5 rounded border border-[#f5b700]/30 font-bold">
                   {selectedMatches.length} MAPS
                 </span>
               </h2>
@@ -658,7 +659,7 @@ export default function ScrimCardModal({
                 type="text"
                 value={teamName}
                 onChange={e => setTeamName(e.target.value)}
-                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#ffb800] text-white px-2.5 py-1.5 rounded-sm outline-none"
+                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#f5b700] text-white px-2.5 py-1.5 rounded-sm outline-none"
               />
             </div>
 
@@ -671,7 +672,7 @@ export default function ScrimCardModal({
                 value={opponentName}
                 onChange={e => setOpponentName(e.target.value)}
                 placeholder="e.g. Elevate or Enigma"
-                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#00e5ff] text-white px-2.5 py-1.5 rounded-sm outline-none"
+                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#f5b700] text-white px-2.5 py-1.5 rounded-sm outline-none"
               />
             </div>
 
@@ -684,7 +685,7 @@ export default function ScrimCardModal({
                 value={seriesTitle}
                 onChange={e => setSeriesTitle(e.target.value)}
                 placeholder="e.g. STAGE 4 SCRIM #1"
-                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#00e5ff] text-white px-2.5 py-1.5 rounded-sm outline-none"
+                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#f5b700] text-white px-2.5 py-1.5 rounded-sm outline-none"
               />
             </div>
 
@@ -695,7 +696,7 @@ export default function ScrimCardModal({
               <select
                 value={seriesFormat}
                 onChange={e => setSeriesFormat(e.target.value)}
-                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#ffb800] text-white px-2.5 py-1.5 rounded-sm outline-none"
+                className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#f5b700] text-white px-2.5 py-1.5 rounded-sm outline-none"
               >
                 <option value="BEST OF 3">BEST OF 3 (BO3)</option>
                 <option value="BEST OF 5">BEST OF 5 (BO5)</option>
@@ -721,7 +722,7 @@ export default function ScrimCardModal({
                 key={m.id || idx}
                 className="bg-[#111723] border border-[#223046] px-2 py-0.5 rounded text-[11px] text-white flex items-center gap-1.5"
               >
-                <span className={m.result === 'W' ? 'text-[#00e5ff]' : 'text-[#ff334b]'}>
+                <span className={m.result === 'W' ? 'text-[#ffd700]' : 'text-[#ff334b]'}>
                   {m.result === 'W' ? '✓' : '✗'}
                 </span>
                 <span>{m.mode} - {m.map}</span>
@@ -743,7 +744,7 @@ export default function ScrimCardModal({
             <button
               type="button"
               onClick={handleCopyClipboard}
-              className="flex-1 sm:flex-initial px-4 py-2 bg-[#161e2e] hover:bg-[#223046] border border-[#354b6d] text-white font-display text-xs tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer rounded-sm"
+              className={`flex-1 sm:flex-initial px-4 py-2 ${THEME_CLASSES.btnSecondary} text-xs flex items-center justify-center gap-2 cursor-pointer rounded-sm`}
             >
               {copied ? <Check size={14} className="text-[#10b981]" /> : <Copy size={14} />}
               <span>{copied ? 'COPIED TO CLIPBOARD!' : 'COPY IMAGE'}</span>
@@ -754,7 +755,7 @@ export default function ScrimCardModal({
               type="button"
               disabled={downloading}
               onClick={handleDownload}
-              className="flex-1 sm:flex-initial px-5 py-2 bg-[#00e5ff] hover:bg-[#00c8e0] text-[#080c14] font-display font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer rounded-sm shadow-[0_0_15px_rgba(0,229,255,0.3)]"
+              className={`flex-1 sm:flex-initial px-5 py-2 ${THEME_CLASSES.btnPrimary} text-xs flex items-center justify-center gap-2 cursor-pointer rounded-sm`}
             >
               <Download size={14} />
               <span>DOWNLOAD PNG</span>

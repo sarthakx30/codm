@@ -1,6 +1,7 @@
 import React from 'react';
+import { PALETTE } from '../../config/theme';
 
-export default function Sparkline({ points = [] }) {
+export default function Sparkline({ points = [], strokeColor = PALETTE.primary }) {
   const pts = points.slice(-12);
   if (pts.length < 2) return null;
 
@@ -20,7 +21,7 @@ export default function Sparkline({ points = [] }) {
       <polyline
         points={polyPoints}
         fill="none"
-        stroke="#00e5ff"
+        stroke={strokeColor}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

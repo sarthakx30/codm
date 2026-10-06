@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getMapMetadata } from '../../utils/mapImages';
+import MapBannerBackdrop from '../common/MapBannerBackdrop';
+import { THEME_CLASSES } from '../../config/theme';
 import {
   Users,
   Shield,
@@ -17,14 +18,13 @@ import {
 export default function MapCard({ mapData }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const m = mapData;
-  const mapMeta = getMapMetadata(m.map);
   const diffSign = m.avgDiff > 0 ? `+${m.avgDiff}` : `${m.avgDiff}`;
 
   const getRoleStyle = (role = '') => {
-    if (role === 'PRIMARY SLAYER') return 'bg-[#ffb800]/15 text-[#ffb800] border-[#ffb800]/40';
-    if (role.includes('ANCHOR') || role.includes('CONTROLLER')) return 'bg-[#00e5ff]/15 text-[#00e5ff] border-[#00e5ff]/40';
-    if (role === 'ENTRY FRAGGER') return 'bg-[#f87171]/15 text-[#f87171] border-[#f87171]/40';
-    if (role === 'SUPPORT FLEX') return 'bg-[#10b981]/15 text-[#10b981] border-[#10b981]/40';
+    if (role === 'PRIMARY SLAYER') return THEME_CLASSES.badgeGold;
+    if (role.includes('ANCHOR') || role.includes('CONTROLLER')) return THEME_CLASSES.badgeGold;
+    if (role === 'ENTRY FRAGGER') return THEME_CLASSES.badgeLoss;
+    if (role === 'SUPPORT FLEX') return THEME_CLASSES.badgeWin;
     return 'bg-[#c084fc]/15 text-[#c084fc] border-[#c084fc]/40';
   };
 
@@ -35,29 +35,8 @@ export default function MapCard({ mapData }) {
         onClick={() => setIsExpanded(!isExpanded)}
         className="relative min-h-[105px] sm:min-h-[120px] p-4 flex items-center justify-between cursor-pointer select-none overflow-hidden"
       >
-        {/* Background Map Image with Fallback Gradient */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={mapMeta.imageUrl}
-            alt={m.map}
-            className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          {/* Fallback procedural gradient */}
-          <div className={`absolute inset-0 bg-gradient-to-r ${mapMeta.theme.gradient} -z-10`} />
-
-          {/* Vignette Overlay for Crisp Readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#06090e]/95 via-[#06090e]/75 to-[#06090e]/90" />
-          <div className="absolute inset-0 bg-black/35" />
-        </div>
-
-        {/* Left Status Bar */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-1.5 z-10"
-          style={{ backgroundColor: m.statusColor, boxShadow: `0 0 10px ${m.statusColor}` }}
-        />
+        {/* Shared Map Backdrop and Left Status Accent */}
+        <MapBannerBackdrop mapName={m.map} accentColor={m.statusColor} />
 
         {/* Main Content */}
         <div className="relative z-10 w-full flex items-center justify-between gap-4">
@@ -92,7 +71,7 @@ export default function MapCard({ mapData }) {
             {/* Optimal 5 Roster Quick Preview */}
             {m.optimalSquad.length > 0 && (
               <div className="mt-2 hidden sm:flex items-center gap-1.5 text-[11px] font-mono-num text-[#7d90a6]">
-                <span className="text-[#00e5ff] font-bold">BEST SQUAD:</span>
+                <span className="text-[#f5b700] font-bold">BEST SQUAD:</span>
                 <span className="text-white">
                   {m.optimalSquad.map(p => p.name).join(' • ')}
                 </span>
@@ -154,19 +133,19 @@ export default function MapCard({ mapData }) {
                 {m.optimalSquad.map((player, idx) => (
                   <div
                     key={player.name}
-                    className="bg-[#111723] border border-[#223046] p-3.5 clip-corner-sm flex flex-col justify-between hover:border-[#00e5ff]/60 transition-all group shadow-md"
+                    className="bg-[#111723] border border-[#223046] p-3.5 clip-corner-sm flex flex-col justify-between hover:border-[#f5b700]/70 transition-all group shadow-md"
                   >
                     <div>
                       {/* Slot # & Diverse Role Badge */}
                       <div className="flex items-center justify-between text-[10px] font-mono-num mb-1.5">
-                        <span className="text-[#ffb800] font-bold">#{idx + 1} SQUAD</span>
+                        <span className="text-[#f5b700] font-bold">#{idx + 1} SQUAD</span>
                         <span className={`px-1.5 py-0.5 rounded-xs border text-[9px] uppercase font-bold tracking-wider ${getRoleStyle(player.role)}`}>
                           {player.role}
                         </span>
                       </div>
 
                       {/* Player Name */}
-                      <div className="font-display font-extrabold text-white text-lg tracking-wide truncate group-hover:text-[#00e5ff] transition-colors">
+                      <div className="font-display font-extrabold text-white text-lg tracking-wide truncate group-hover:text-[#ffd700] transition-colors">
                         {player.name}
                       </div>
 
@@ -180,20 +159,20 @@ export default function MapCard({ mapData }) {
                     <div className="mt-3 pt-2.5 border-t border-[#223046]/70 space-y-1.5 text-xs font-mono-num">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] text-[#7d90a6]">MAP K/D</span>
-                        <span className={`font-bold ${player.kd >= 1.2 ? 'text-[#ffb800]' : 'text-white'}`}>
+                        <span className={`font-bold ${player.kd >= 1.2 ? 'text-[#ffd700]' : 'text-white'}`}>
                           {player.kd.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] text-[#7d90a6]">AVG SCORE</span>
-                        <span className="font-bold text-[#00e5ff]">
+                        <span className="font-bold text-[#ffffff]">
                           {player.avgScore ? player.avgScore.toLocaleString() : '0'}
                         </span>
                       </div>
                       {m.mode.includes('HARDPOINT') && (
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] text-[#7d90a6]">HILL TIME</span>
-                          <span className="font-bold text-[#ffb800]">
+                          <span className="font-bold text-[#ffd700]">
                             {player.time}s
                           </span>
                         </div>
@@ -230,7 +209,7 @@ export default function MapCard({ mapData }) {
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[#ffb800] font-bold block">{p.kd.toFixed(2)} K/D</span>
+                      <span className="text-[#ffd700] font-bold block">{p.kd.toFixed(2)} K/D</span>
                       <span className="text-[9px] text-[#7d90a6]">Reserve #{idx + 6}</span>
                     </div>
                   </div>

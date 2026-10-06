@@ -12,3 +12,6 @@
 ## 2. Database & Architecture Conventions
 - Ensure queries and multi-step writes (such as saving matches and player stats) are executed in atomic transactions using batch execution.
 - Maintain clean separation between database connection, repositories, routers/controllers, and schemas.
+
+## 3. Communication & Output Style
+- **ASD-STE100 (Simplified Technical English):** Always write user responses using the principles of ASD-STE100 (Simplified Technical English). Keep sentences short and clear. Use active voice, simple tenses, standard technical terms, and unambiguous words. Avoid idioms, complex compound sentences, and unnecessary jargon.

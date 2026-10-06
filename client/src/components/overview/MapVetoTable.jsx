@@ -1,11 +1,12 @@
 import React from 'react';
+import { THEME_CLASSES } from '../../config/theme';
 
 export default function MapVetoTable({ vetoList }) {
   if (!vetoList || !vetoList.length) {
     return (
       <div className="mb-6">
         <h2 className="text-lg font-display text-white flex items-center gap-2 mb-2.5">
-          <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
+          <span className="w-1 h-3.5 bg-primary inline-block"></span>
           MAP VETO & PICK STRATEGY
         </h2>
         <p className="text-xs text-[#7d90a6] font-mono-num">Play 2+ matches per map to view draft recommendations.</p>
@@ -16,7 +17,7 @@ export default function MapVetoTable({ vetoList }) {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-display text-white flex items-center gap-2 mb-2.5">
-        <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
+        <span className="w-1 h-3.5 bg-primary inline-block"></span>
         MAP VETO & PICK STRATEGY
       </h2>
 
@@ -42,18 +43,18 @@ export default function MapVetoTable({ vetoList }) {
                   </td>
                   <td className="py-2 px-2 text-right text-[#f0f4f8]">{item.played}</td>
                   <td className="py-2 px-2 text-right text-[#7d90a6]">
-                    <span className="text-[#00e5ff]">{item.wins}</span> -{' '}
-                    <span className="text-[#ff334b]">{item.losses}</span>
+                    <span className="text-win">{item.wins}</span> -{' '}
+                    <span className="text-loss">{item.losses}</span>
                   </td>
                   <td className="py-2 px-2 text-right font-bold text-white">{item.winRate}%</td>
                   <td className="py-2 px-3 text-right">
                     <span
                       className={`inline-block text-[11px] font-display font-bold px-2 py-0.5 border ${
                         isPick
-                          ? 'border-[#22c55e] text-[#22c55e] bg-[#22c55e]/15'
+                          ? THEME_CLASSES.badgeWin
                           : isBan
-                          ? 'border-[#ff334b] text-[#ff334b] bg-[#ff334b]/15'
-                          : 'border-[#223046] text-[#7d90a6] bg-transparent'
+                          ? THEME_CLASSES.badgeLoss
+                          : THEME_CLASSES.badgeNeutral
                       }`}
                     >
                       {item.recommendation}

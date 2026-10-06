@@ -16,7 +16,7 @@ export default function OpponentList({ opponentList }) {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-display text-white flex items-center gap-2 mb-2.5">
-        <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
+        <span className="w-1 h-3.5 bg-primary inline-block"></span>
         OPPONENTS
       </h2>
 
@@ -36,11 +36,11 @@ export default function OpponentList({ opponentList }) {
                 <td className="py-2 px-3 font-display text-sm font-semibold text-white tracking-wide">
                   {opp.name}
                 </td>
-                <td className="py-2 px-2 text-[#ffb800] font-bold">{opp.tier || '-'}</td>
+                <td className="py-2 px-2 text-secondary font-bold">{opp.tier || '-'}</td>
                 <td className="py-2 px-2 text-right text-[#f0f4f8]">{opp.played}</td>
                 <td className="py-2 px-3 text-right text-[#7d90a6]">
-                  <span className="text-[#00e5ff]">{opp.wins}</span> -{' '}
-                  <span className="text-[#ff334b]">{opp.played - opp.wins}</span>
+                  <span className="text-win">{opp.wins}</span> -{' '}
+                  <span className="text-loss">{opp.played - opp.wins}</span>
                 </td>
               </tr>
             ))}

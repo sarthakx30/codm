@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #f5b700;
+  --color-primary-bright: #ffd700;
+  --color-primary-dark: #c89b3c;
+  --color-secondary: #ffd700;
+  --color-cyan: #00e5ff;
+  --color-cyan-bright: #38bdf8;
+  --color-surface-base: #080c14;
+  --color-surface-panel: #111723;
+  --color-surface-card: #161e2e;
+  --color-surface-elevated: #0c111a;
+  --color-border-subtle: #223046;
+  --color-border-default: #243044;
+  --color-border-bright: #354b6d;
+  --color-win: #10b981;
+  --color-loss: #ff334b;
+  --color-neutral: #7d90a6;
+}
+
 @layer base {
   :root {
     --bg-dark: #080c14;
@@ -7,19 +26,24 @@
     --card-dark: #161e2e;
     --line-dark: #223046;
     --line-bright: #354b6d;
-    --cyan-accent: #00e5ff;
-    --gold-accent: #ffb800;
+    --gold-primary: #f5b700;
+    --gold-bright: #ffd700;
+    --gold-dark: #c89b3c;
+    --cyan-tactical: #00e5ff;
+    --cyan-bright: #38bdf8;
     --crimson-accent: #ff334b;
-    --text-primary: #f0f4f8;
+    --emerald-accent: #10b981;
+    --text-primary: #ffffff;
+    --text-secondary: #e2e8f0;
     --text-muted: #7d90a6;
   }
 
   body {
     background-color: var(--bg-dark);
     background-image: 
-      linear-gradient(rgba(0, 229, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 229, 255, 0.025) 1px, transparent 1px);
-    background-size: 24px 24px;
+      linear-gradient(rgba(245, 183, 0, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245, 183, 0, 0.02) 1px, transparent 1px);
+    background-size: 28px 28px;
     font-family: 'Rajdhani', -apple-system, sans-serif;
     color: var(--text-primary);
   }
@@ -67,7 +91,11 @@
 }
 
 .glow-gold {
-  box-shadow: 0 0 14px rgba(255, 184, 0, 0.3);
+  box-shadow: 0 0 14px rgba(245, 183, 0, 0.35);
+}
+
+.glow-gold-lg {
+  box-shadow: 0 0 24px rgba(245, 183, 0, 0.45);
 }
 
 .glow-crimson {
@@ -83,9 +111,9 @@
   background: #0b0f19;
 }
 ::-webkit-scrollbar-thumb {
-  background: #223046;
+  background: #243044;
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #00e5ff;
+  background: #f5b700;
 }

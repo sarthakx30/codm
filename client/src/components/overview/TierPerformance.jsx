@@ -16,7 +16,7 @@ export default function TierPerformance({ tierList }) {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-display text-white flex items-center gap-2 mb-2.5">
-        <span className="w-1 h-3.5 bg-[#ffb800] inline-block"></span>
+        <span className="w-1 h-3.5 bg-primary inline-block"></span>
         OPPONENT TIER PERFORMANCE
       </h2>
 
@@ -33,7 +33,7 @@ export default function TierPerformance({ tierList }) {
           </thead>
           <tbody className="divide-y divide-[#223046]/40">
             {tierList.map((t, idx) => {
-              const diffCol = t.avgDiff >= 0 ? 'text-[#00e5ff]' : 'text-[#ff334b]';
+              const diffCol = t.avgDiff >= 0 ? 'text-win' : 'text-loss';
               const diffSign = t.avgDiff >= 0 ? '+' : '';
               return (
                 <React.Fragment key={idx}>
@@ -43,8 +43,8 @@ export default function TierPerformance({ tierList }) {
                     </td>
                     <td className="py-2 px-2 text-right text-[#f0f4f8]">{t.played}</td>
                     <td className="py-2 px-2 text-right text-[#7d90a6]">
-                      <span className="text-[#00e5ff]">{t.wins}</span> -{' '}
-                      <span className="text-[#ff334b]">{t.losses}</span>
+                      <span className="text-win">{t.wins}</span> -{' '}
+                      <span className="text-loss">{t.losses}</span>
                     </td>
                     <td className="py-2 px-2 text-right text-white font-bold">{t.winRate}%</td>
                     <td className={`py-2 px-3 text-right font-bold ${diffCol}`}>

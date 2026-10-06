@@ -3,6 +3,7 @@
  * Computes mode-aware map statistics, win rates, individual player ratings,
  * and algorithmically verified starting 5 squad recommendations with diverse roles.
  */
+import { PALETTE } from '../config/theme';
 import { calculatePlayerStats } from './playerAnalytics.js';
 
 export function calculateMapsIntel(matches = []) {
@@ -193,13 +194,13 @@ export function calculateMapsIntel(matches = []) {
 
     // Map status determination
     let status = 'CONTESTED';
-    let statusColor = '#ffb800'; // gold
+    let statusColor = PALETTE.primary; // gold
     if (winRate >= 70 && totalGames >= 2) {
       status = 'STRONGHOLD';
-      statusColor = '#10b981'; // emerald
+      statusColor = PALETTE.win; // emerald
     } else if (winRate <= 35 && totalGames >= 2) {
       status = 'VULNERABLE';
-      statusColor = '#ff334b'; // crimson
+      statusColor = PALETTE.loss; // crimson
     }
 
     results.push({

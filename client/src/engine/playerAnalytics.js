@@ -2,6 +2,8 @@
  * Player Performance & Role Classification Engine
  */
 
+import { PALETTE } from '../config/theme';
+
 export function parseTier(t = '') {
   const m = String(t || '').toUpperCase().match(/^(T[123])([HML])?$/);
   return m ? { main: m[1], sub: m[2] || '' } : { main: '', sub: '' };
@@ -212,19 +214,19 @@ export function getPlayerMapBreakdown(matches = [], playerName = '') {
 
       // Tactical Performance Role Tag
       let tag = 'PAR';
-      let tagColor = '#7d90a6';
+      let tagColor = PALETTE.neutral;
       if (isHp && pAvgHpTime >= 50 && objRatio >= 1.5) {
         tag = 'ANCHOR';
-        tagColor = '#ffb800';
+        tagColor = PALETTE.primary;
       } else if (delta >= 25) {
         tag = 'CARRY';
-        tagColor = '#ffb800';
+        tagColor = PALETTE.primary;
       } else if (delta >= 8) {
         tag = 'IMPACT';
-        tagColor = '#00e5ff';
+        tagColor = PALETTE.primaryBright;
       } else if (delta <= -8) {
         tag = 'DRAG';
-        tagColor = '#ff334b';
+        tagColor = PALETTE.loss;
       }
 
       return {
