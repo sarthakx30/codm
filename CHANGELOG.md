@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added single-click action to apply opponent name, tier, and category to all queued matches.
   - Supported manual tier changes during screenshot verification.
 
+### Tier Sorting & Hierarchy Alignment
+- **Hierarchical Tier Sorting Engine (`tierAnalytics.js`):**
+  - Added `getTierWeight` and `compareTiers` utilities to enforce mathematical tier order: `T1H` → `T1M` → `T1L` → `T1` → `T2H` → `T2M` → `T2L` → `T2` → `T3H` → `T3M` → `T3L` → `T3` → Untiered.
+  - Sorted subtiers within [TierPerformance.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/overview/TierPerformance.jsx) in strict descending hierarchy (High → Mid → Low).
+- **Interactive Opponent Table Sorting (`OpponentList.jsx`):**
+  - Added interactive column sorting with default sorting by tier hierarchy.
+  - Added sort direction arrows (`▲`/`▼`) and active column indicator.
+- **Match Editor Subtier Controls (`MatchBannerCard.jsx`):**
+  - Added High, Mid, and Low subtier buttons to match card editor.
+
 ---
 
 ## [1.2.0] - 2026-10-06

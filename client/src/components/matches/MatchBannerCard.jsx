@@ -263,11 +263,33 @@ export default function MatchBannerCard({
                             : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
                         }`}
                       >
-                        {val ? val.replace('T', 'T') : 'None'}
+                        {val ? val.replace('T', 'Tier ') : 'None'}
                       </button>
                     );
                   })}
                 </div>
+                {/* Subtier selector sorted High -> Mid -> Low */}
+                {pt.main && (
+                  <div className="flex gap-1">
+                    {['H', 'M', 'L'].map(sub => {
+                      const isActive = pt.sub === sub;
+                      return (
+                        <button
+                          type="button"
+                          key={sub}
+                          onClick={() => onFieldChange(m.id, 'tier', `${pt.main}${sub}`)}
+                          className={`flex-1 py-0.5 text-[11px] font-display border ${
+                            isActive
+                              ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15 font-bold'
+                              : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
+                          }`}
+                        >
+                          {sub === 'H' ? 'High' : sub === 'M' ? 'Mid' : 'Low'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Category */}

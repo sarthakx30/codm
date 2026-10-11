@@ -3,6 +3,18 @@
  */
 import { parseTier } from './playerAnalytics';
 
+export function getTierWeight(tier = '') {
+  const pt = parseTier(tier);
+  if (!pt.main) return 999;
+  const mainWeight = pt.main === 'T1' ? 10 : pt.main === 'T2' ? 20 : pt.main === 'T3' ? 30 : 40;
+  const subWeight = pt.sub === 'H' ? 1 : pt.sub === 'M' ? 2 : pt.sub === 'L' ? 3 : 4;
+  return mainWeight + subWeight;
+}
+
+export function compareTiers(tierA = '', tierB = '') {
+  return getTierWeight(tierA) - getTierWeight(tierB);
+}
+
 export function calculateTierPerformance(matches = []) {
   const tiers = {
     'Tier 1': { name: 'Tier 1', played: 0, wins: 0, diff: 0, subtiers: {} },
@@ -32,11 +44,13 @@ export function calculateTierPerformance(matches = []) {
     losses: t.played - t.wins,
     winRate: Math.round((t.wins / t.played) * 100),
     avgDiff: Math.round(t.diff / t.played),
-    subtierList: Object.values(t.subtiers).map(s => ({
-      ...s,
-      losses: s.played - s.wins,
-      winRate: Math.round((s.wins / s.played) * 100)
-    }))
+    subtierList: Object.values(t.subtiers)
+      .sort((a, b) => compareTiers(a.name, b.name))
+      .map(s => ({
+        ...s,
+        losses: s.played - s.wins,
+        winRate: Math.round((s.wins / s.played) * 100)
+      }))
   }));
 }
 
@@ -60,5 +74,10 @@ export function calculateOpponents(matches = []) {
     if (m.tier) node.tier = m.tier;
   });
 
-  return Object.values(oppMap).sort((a, b) => b.played - a.played);
+  // Sort by tier hierarchy first (T1H -> T1M -> T1L -> T2H...), then games played
+  return Object.values(oppMap).sort((a, b) => {
+    const tierDiff = compareTiers(a.tier, b.tier);
+    if (tierDiff !== 0) return tierDiff;
+    return b.played - a.played;
+  });
 }
