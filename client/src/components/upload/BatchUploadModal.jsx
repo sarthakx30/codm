@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { api } from '../../api/client';
 import { parseTier } from '../../engine/playerAnalytics';
+import { calculateOpponents } from '../../engine/tierAnalytics';
 import { THEME_CLASSES } from '../../config/theme';
-import { UploadCloud, CheckCircle2, AlertTriangle, XCircle, ArrowRight, UserMinus, Users, Sparkles } from 'lucide-react';
+import { UploadCloud, CheckCircle2, AlertTriangle, XCircle, ArrowRight, UserMinus, Users, Sparkles, Layers } from 'lucide-react';
 
 function shrinkImage(file) {
   return new Promise(resolve => {
@@ -21,11 +22,71 @@ function shrinkImage(file) {
   });
 }
 
-export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimModal, onOpenAliasModal }) {
+export default function BatchUploadModal({ matches = [], onMatchSaved, showToast, onOpenScrimModal, onOpenAliasModal }) {
   const [queue, setQueue] = useState([]);
   const [queueIndex, setQueueIndex] = useState(0);
   const [lastSavedBatch, setLastSavedBatch] = useState([]);
+  const [seriesOpponent, setSeriesOpponent] = useState('');
+  const [seriesTier, setSeriesTier] = useState('');
+  const [seriesGameType, setSeriesGameType] = useState('scrim');
   const fileInputRef = useRef(null);
+
+  const priorOpponents = useMemo(() => calculateOpponents(matches), [matches]);
+
+  const applySeriesDetailsToAll = (targetOpponent, targetTier, targetGameType) => {
+    const opp = targetOpponent !== undefined ? targetOpponent : seriesOpponent;
+    const tier = targetTier !== undefined ? targetTier : seriesTier;
+    const gt = targetGameType !== undefined ? targetGameType : seriesGameType;
+
+    setQueue(prev => prev.map(q => {
+      if (!q.match) return q;
+      return {
+        ...q,
+        match: {
+          ...q.match,
+          opponent: opp,
+          tier: tier !== undefined ? tier : q.match.tier,
+          game_type: gt !== undefined ? gt : q.match.game_type
+        }
+      };
+    }));
+
+    if (showToast) {
+      showToast(`Applied ${opp || 'unnamed'} (${tier || 'No tier'}) to all queued matches.`);
+    }
+  };
+
+  const handleSelectOpponentForMatch = (selectedName, forBatch = false) => {
+    if (!selectedName) return;
+    const pastOpp = priorOpponents.find(o => o.name.toLowerCase() === selectedName.toLowerCase());
+    const pastTier = pastOpp?.tier || '';
+
+    if (forBatch) {
+      setSeriesOpponent(selectedName);
+      if (pastTier) setSeriesTier(pastTier);
+      applySeriesDetailsToAll(selectedName, pastTier, seriesGameType);
+    } else {
+      if (!cur || !cur.match) return;
+      const updated = {
+        ...cur.match,
+        opponent: selectedName,
+        tier: pastTier || cur.match.tier
+      };
+      setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
+      if (showToast && pastTier) {
+        showToast(`Auto-populated tier ${pastTier} for ${selectedName}`);
+      }
+    }
+  };
+
+  const handleApplyCurrentToBatch = () => {
+    if (!cur || !cur.match) return;
+    const { opponent, tier, game_type } = cur.match;
+    setSeriesOpponent(opponent || '');
+    setSeriesTier(tier || '');
+    if (game_type) setSeriesGameType(game_type);
+    applySeriesDetailsToAll(opponent, tier, game_type);
+  };
 
   const handleFiles = async (files) => {
     const fileList = Array.from(files);
@@ -53,11 +114,16 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
         const shrunkBlob = await shrinkImage(fileList[i]);
         const response = await api.parseScreenshot(shrunkBlob);
         const matchData = response.match;
-        if (matchData && matchData.us) {
-          matchData.us = matchData.us.map(p => ({
-            ...p,
-            _originalName: p.raw_name || p.name
-          }));
+        if (matchData) {
+          if (seriesOpponent) matchData.opponent = seriesOpponent;
+          if (seriesTier) matchData.tier = seriesTier;
+          if (seriesGameType) matchData.game_type = seriesGameType;
+          if (matchData.us) {
+            matchData.us = matchData.us.map(p => ({
+              ...p,
+              _originalName: p.raw_name || p.name
+            }));
+          }
         }
         setQueue(prev => prev.map((q, idx) => idx === i ? {
           ...q,
@@ -283,6 +349,51 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
               );
             })}
           </div>
+
+          {/* Series defaults bar when reviewing multi-match batches */}
+          <div className="mt-2.5 pt-2.5 border-t border-[#223046]/70 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs font-mono-num">
+            <div className="flex items-center gap-2">
+              <Layers size={13} className="text-[#f5b700]" />
+              <span className="font-display font-bold text-xs text-[#f5b700] tracking-wider">
+                SERIES INTEL (APPLY TO ENTIRE BATCH)
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <select
+                value={priorOpponents.some(o => o.name.toLowerCase() === seriesOpponent.toLowerCase()) ? seriesOpponent : ''}
+                onChange={e => handleSelectOpponentForMatch(e.target.value, true)}
+                className="bg-[#080c14] border border-[#354b6d] text-white px-2 py-1 text-xs rounded-xs"
+              >
+                <option value="">-- Past Team ({priorOpponents.length}) --</option>
+                {priorOpponents.map(opp => (
+                  <option key={opp.name} value={opp.name}>
+                    {opp.name} {opp.tier ? `[${opp.tier}]` : ''} ({opp.played}M)
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={seriesOpponent}
+                onChange={e => {
+                  const val = e.target.value;
+                  setSeriesOpponent(val);
+                  const found = priorOpponents.find(o => o.name.toLowerCase() === val.toLowerCase());
+                  if (found?.tier) setSeriesTier(found.tier);
+                }}
+                placeholder="Or custom opponent"
+                className="bg-[#080c14] border border-[#354b6d] text-white px-2 py-1 text-xs rounded-xs w-36"
+              />
+              <button
+                type="button"
+                onClick={() => applySeriesDetailsToAll()}
+                className="px-2.5 py-1 bg-[#f5b700] hover:bg-[#ffd700] text-[#0a0d14] font-display font-extrabold text-[11px] clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(245,183,0,0.25)] flex items-center gap-1"
+                title="Apply series opponent and tier to all matches in this batch"
+              >
+                <CheckCircle2 size={11} />
+                <span>SYNC ALL ({queue.length})</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -483,19 +594,52 @@ export default function BatchUploadModal({ onMatchSaved, showToast, onOpenScrimM
               </div>
 
               {/* Match Metadata (Opponent, Tier, Game Type) */}
-              <div className="bg-[#161e2e] border border-[#223046] p-3 clip-corner-sm space-y-2 text-xs font-mono-num">
+              <div className="bg-[#161e2e] border border-[#223046] p-3 clip-corner-sm space-y-2.5 text-xs font-mono-num">
                 <div>
-                  <label className="block text-[#7d90a6] mb-1">Opponent Team</label>
-                  <input
-                    type="text"
-                    value={cur.match.opponent || ''}
-                    onChange={e => {
-                      const updated = { ...cur.match, opponent: e.target.value };
-                      setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
-                    }}
-                    placeholder="e.g. Elevate"
-                    className="w-full bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[#7d90a6]">Opponent Team</label>
+                    {queue.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={handleApplyCurrentToBatch}
+                        className="text-[10px] text-[#f5b700] hover:text-[#ffd700] flex items-center gap-1 font-display uppercase tracking-wider cursor-pointer"
+                        title="Copy this opponent and tier to all matches in the batch"
+                      >
+                        <Layers size={11} />
+                        <span>APPLY TO ALL IN BATCH ({queue.length})</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <select
+                      value={priorOpponents.some(o => o.name.toLowerCase() === (cur.match.opponent || '').toLowerCase()) ? cur.match.opponent : ''}
+                      onChange={e => handleSelectOpponentForMatch(e.target.value, false)}
+                      className="bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm focus:border-[#f5b700]"
+                    >
+                      <option value="">-- Pick past opponent ({priorOpponents.length}) --</option>
+                      {priorOpponents.map(opp => (
+                        <option key={opp.name} value={opp.name}>
+                          {opp.name} {opp.tier ? `[${opp.tier}]` : ''} ({opp.played} played)
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={cur.match.opponent || ''}
+                      onChange={e => {
+                        const val = e.target.value;
+                        const matchOpp = priorOpponents.find(o => o.name.toLowerCase() === val.toLowerCase());
+                        const updated = {
+                          ...cur.match,
+                          opponent: val,
+                          tier: matchOpp?.tier ? matchOpp.tier : cur.match.tier
+                        };
+                        setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
+                      }}
+                      placeholder="e.g. Elevate / Tribe"
+                      className="bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm focus:border-[#f5b700]"
+                    />
+                  </div>
                 </div>
 
                 <div>

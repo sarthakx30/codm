@@ -43,15 +43,18 @@ export default function Sidebar({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-display font-extrabold text-white text-lg tracking-wider m-0 leading-none">
-                  HORIZON
+                <h1 className="font-display font-extrabold text-white text-lg tracking-wider m-0 leading-none flex items-baseline gap-1.5">
+                  <span>HORIZON</span>
+                  <span className="text-xs font-mono-num font-bold text-[#f5b700] tracking-wider uppercase">
+                    TATTA
+                  </span>
                 </h1>
                 <span className={`text-[10px] font-mono-num ${THEME_CLASSES.badgeGold} px-1.5 py-0.2 rounded-xs font-bold`}>
                   {APP_VERSION}
                 </span>
               </div>
-              <span className="text-[10px] font-mono-num text-[#8292a8] tracking-widest block mt-0.5">
-                TACTICAL ANALYTICS
+              <span className="text-[10px] font-mono-num text-[#8292a8] tracking-wider block mt-0.5">
+                Tactical Analysis & Team Tracking Application
               </span>
             </div>
           </div>

@@ -239,6 +239,7 @@ export default function App() {
           {activeTab === 'add' && (
             <section className="animate-fadeIn">
               <BatchUploadModal
+                matches={matches}
                 onMatchSaved={loadMatches}
                 showToast={showToast}
                 onOpenScrimModal={handleOpenScrimModal}

@@ -2,7 +2,7 @@
  * Application Version Configuration
  * Centralized version identifier kept in strict sync with CHANGELOG.md.
  */
-export const APP_VERSION = 'v1.2';
-export const APP_NAME = 'HORIZON';
-export const APP_SUBTITLE = 'CODM TACTICAL TRACKER & SQUAD INTEL';
-export const APP_BUILD_DATE = '2026-10-06';
+export const APP_VERSION = 'v1.3';
+export const APP_NAME = 'HORIZON TATTA';
+export const APP_SUBTITLE = 'Tactical Analysis & Team Tracking Application';
+export const APP_BUILD_DATE = '2026-10-12';

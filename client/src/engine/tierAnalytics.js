@@ -45,16 +45,19 @@ export function calculateOpponents(matches = []) {
 
   matches.forEach(m => {
     if (!m.opponent) return;
-    const key = m.opponent.trim().toLowerCase();
+    const cleanName = m.opponent.trim();
+    if (!cleanName) return;
+    const key = cleanName.toLowerCase();
     const node = oppMap[key] = oppMap[key] || {
-      name: m.opponent.trim(),
-      tier: m.tier || '',
+      name: cleanName,
+      tier: '',
       played: 0,
       wins: 0
     };
     node.played++;
     if (m.result === 'W') node.wins++;
-    if (m.tier && !node.tier) node.tier = m.tier;
+    // Keep most recent tier recorded against this opponent
+    if (m.tier) node.tier = m.tier;
   });
 
   return Object.values(oppMap).sort((a, b) => b.played - a.played);

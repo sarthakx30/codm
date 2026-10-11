@@ -59,23 +59,31 @@ export default function Header({
       </div>
 
       {/* Main Title & Gold Gradient Accent */}
-      <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-3xl sm:text-5xl font-extrabold font-display tracking-wider text-white drop-shadow-[0_0_20px_rgba(245,183,0,0.35)]">
-            HORIZON
-          </h1>
-          <span className={`text-xs font-mono-num ${THEME_CLASSES.badgeGold} px-2 py-0.5 rounded-xs font-bold`}>
-            {APP_VERSION}
-          </span>
-          {serverError && (
-            <span className={`inline-flex items-center gap-1 text-xs font-mono-num ${THEME_CLASSES.badgeLoss} px-2 py-0.5 tracking-wider font-bold animate-pulse clip-corner-sm`}>
-              <AlertOctagon size={12} />
-              // SERVER UNREACHABLE
+      <div className="flex items-end justify-between flex-wrap gap-2">
+        <div className="flex flex-col">
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-3xl sm:text-5xl font-extrabold font-display tracking-wider text-white drop-shadow-[0_0_20px_rgba(245,183,0,0.35)] flex items-baseline gap-2">
+              <span>HORIZON</span>
+              <span className="text-lg sm:text-2xl font-mono-num font-bold text-[#f5b700] tracking-wider uppercase">
+                TATTA
+              </span>
+            </h1>
+            <span className={`text-xs font-mono-num ${THEME_CLASSES.badgeGold} px-2 py-0.5 rounded-xs font-bold`}>
+              {APP_VERSION}
             </span>
-          )}
+            {serverError && (
+              <span className={`inline-flex items-center gap-1 text-xs font-mono-num ${THEME_CLASSES.badgeLoss} px-2 py-0.5 tracking-wider font-bold animate-pulse clip-corner-sm`}>
+                <AlertOctagon size={12} />
+                // SERVER UNREACHABLE
+              </span>
+            )}
+          </div>
+          <span className="text-[11px] sm:text-xs font-mono-num text-[#8292a8] tracking-wider mt-1">
+             Tactical Analysis & Team Tracking Application
+          </span>
         </div>
         {!serverError && (
-          <span className="text-xs font-mono-num text-[#8292a8] tracking-widest hidden sm:inline">
+          <span className="text-xs font-mono-num text-[#8292a8] tracking-widest hidden lg:inline">
             // TACTICAL INTELLIGENCE & SQUAD OPTIMIZATION
           </span>
         )}

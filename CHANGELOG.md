@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-10-12
+
+### Branding & Identity
+- **Horizon TATTA Designation:**
+  - Updated application title to **HORIZON TATTA** across [Header.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/common/Header.jsx), [Sidebar.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/common/Sidebar.jsx), and [version.js](file:///c:/Users/Sarthak/Projects/codm/client/src/config/version.js).
+  - Styled `TATTA` in smaller gold sub-font (`font-mono-num font-bold text-[#f5b700]`).
+  - Updated subtitle to `// TACTICAL ANALYSIS & TEAM TRACKING ARCHITECTURE`.
+
+### Batch Upload & Opponent History
+- **Prior Opponent Selection:**
+  - Added opponent dropdown selector in [BatchUploadModal.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/upload/BatchUploadModal.jsx).
+  - Connected match history from [App.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/App.jsx) to opponent list calculation in [tierAnalytics.js](file:///c:/Users/Sarthak/Projects/codm/client/src/engine/tierAnalytics.js).
+  - Automatically loads the last recorded tier when user selects an opponent.
+- **Series-Wide Metadata Sync:**
+  - Added Series Intel default bar for multi-match batch uploads.
+  - Added single-click action to apply opponent name, tier, and category to all queued matches.
+  - Supported manual tier changes during screenshot verification.
+
+---
+
 ## [1.2.0] - 2026-10-06
 
 ### Color Palette & Theme Convergence
