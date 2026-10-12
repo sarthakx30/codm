@@ -38,6 +38,14 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
     const tier = targetTier !== undefined ? targetTier : seriesTier;
     const gt = targetGameType !== undefined ? targetGameType : seriesGameType;
 
+    if (tier) {
+      const pt = parseTier(tier);
+      if (pt.main && !pt.sub) {
+        alert('Subtier (High, Mid, or Low) is mandatory when specifying opponent tier. Plain T1, T2, or T3 is not permitted.');
+        return;
+      }
+    }
+
     setQueue(prev => prev.map(q => {
       if (!q.match) return q;
       return {
@@ -183,6 +191,13 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
 
   const handleSaveCurrent = async () => {
     if (!cur || !cur.match) return;
+    if (cur.match.tier) {
+      const pt = parseTier(cur.match.tier);
+      if (pt.main && !pt.sub) {
+        alert('Subtier (High, Mid, or Low) is mandatory when specifying opponent tier. Standalone T1, T2, or T3 is not permitted.');
+        return;
+      }
+    }
     try {
       const renames = {};
       cur.match.us.forEach(p => {
@@ -645,7 +660,14 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                 <div>
                   <div className="flex justify-between items-center text-[#7d90a6] mb-1">
                     <span>Opponent Tier</span>
-                    <span className="text-[#ffb800] font-bold">Selected: {cur.match.tier || 'None'}</span>
+                    <div className="flex items-center gap-1.5">
+                      {parseTier(cur.match.tier).main && !parseTier(cur.match.tier).sub && (
+                        <span className="text-[#ff334b] text-[10px] font-bold animate-pulse">
+                          SUBTIER REQUIRED
+                        </span>
+                      )}
+                      <span className="text-[#ffb800] font-bold">Selected: {cur.match.tier || 'None'}</span>
+                    </div>
                   </div>
                   {/* Main Tier */}
                   <div className="flex gap-1 mb-1">
@@ -657,7 +679,7 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                           type="button"
                           key={val}
                           onClick={() => {
-                            const newTier = val ? `${val}${pt.sub || 'M'}` : '';
+                            const newTier = val ? `${val}${pt.sub || ''}` : '';
                             const updated = { ...cur.match, tier: newTier };
                             setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
                           }}
@@ -672,30 +694,38 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                       );
                     })}
                   </div>
-                  {/* Subtier */}
+                  {/* Subtier (Mandatory when main tier is selected) */}
                   {parseTier(cur.match.tier).main && (
-                    <div className="flex gap-1">
-                      {['H', 'M', 'L'].map(sub => {
-                        const pt = parseTier(cur.match.tier);
-                        const isActive = pt.sub === sub;
-                        return (
-                          <button
-                            type="button"
-                            key={sub}
-                            onClick={() => {
-                              const updated = { ...cur.match, tier: `${pt.main}${sub}` };
-                              setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
-                            }}
-                            className={`flex-1 py-0.5 text-[11px] font-display border ${
-                              isActive
-                                ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15'
-                                : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
-                            }`}
-                          >
-                            {sub === 'H' ? 'High' : sub === 'M' ? 'Mid' : 'Low'}
-                          </button>
-                        );
-                      })}
+                    <div>
+                      <div className="flex items-center justify-between text-[10px] font-mono-num text-[#8292a8] mb-1">
+                        <span>Subtier (Mandatory):</span>
+                        {!parseTier(cur.match.tier).sub && (
+                          <span className="text-[#ff334b] font-bold animate-pulse">Pick H, M, or L *</span>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        {['H', 'M', 'L'].map(sub => {
+                          const pt = parseTier(cur.match.tier);
+                          const isActive = pt.sub === sub;
+                          return (
+                            <button
+                              type="button"
+                              key={sub}
+                              onClick={() => {
+                                const updated = { ...cur.match, tier: `${pt.main}${sub}` };
+                                setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
+                              }}
+                              className={`flex-1 py-1 text-xs font-display border transition-all ${
+                                isActive
+                                  ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/25 font-bold shadow-[0_0_8px_rgba(245,183,0,0.3)]'
+                                  : 'border-[#223046] text-[#7d90a6] bg-[#080c14] hover:border-[#f5b700]/50'
+                              }`}
+                            >
+                              {sub === 'H' ? 'High (H)' : sub === 'M' ? 'Mid (M)' : 'Low (L)'}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -732,7 +762,12 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                 <button
                   type="button"
                   onClick={handleSaveCurrent}
-                  className={`flex-1 py-2 ${THEME_CLASSES.btnPrimary} text-sm clip-corner-sm cursor-pointer`}
+                  disabled={Boolean(parseTier(cur.match.tier).main && !parseTier(cur.match.tier).sub)}
+                  className={`flex-1 py-2 ${
+                    parseTier(cur.match.tier).main && !parseTier(cur.match.tier).sub
+                      ? 'opacity-50 cursor-not-allowed bg-[#223046] text-[#7d90a6]'
+                      : THEME_CLASSES.btnPrimary
+                  } text-sm clip-corner-sm cursor-pointer`}
                 >
                   {cur.duplicate ? 'SAVE ANYWAY' : 'SAVE MATCH'}
                 </button>

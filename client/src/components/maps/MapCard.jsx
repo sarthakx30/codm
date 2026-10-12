@@ -59,8 +59,18 @@ export default function MapCard({ mapData }) {
                 {m.mode}
               </span>
               <span className="text-[#64748b]">
-                {m.wins}W - {m.losses}L ({m.winRate}% WIN RATE)
+                {m.wins}W - {m.losses}L ({m.winRate}% RAW • {m.weightedWinRate}% TIER-WT)
               </span>
+
+              {/* Tier breakdown chips */}
+              {Object.entries(m.tierBreakdown || {}).map(([tName, tData]) => (
+                <span
+                  key={tName}
+                  className="px-1.5 py-0.2 rounded-xs bg-[#111723] border border-[#223046] text-[10px] text-[#7d90a6]"
+                >
+                  <span className="text-[#f5b700] font-bold">{tName}:</span> {tData.wins}W-{tData.losses}L
+                </span>
+              ))}
             </div>
 
             {/* Map Title */}
@@ -79,22 +89,29 @@ export default function MapCard({ mapData }) {
             )}
           </div>
 
-          {/* Right: Avg Margin & Expand Arrow */}
+          {/* Right: Weighted Margin & Expand Arrow */}
           <div className="flex items-center gap-4 sm:gap-6">
             
             <div className="text-right">
-              <span className="text-[10px] font-mono-num text-[#7d90a6] uppercase tracking-wider block">
-                AVG DIFFERENTIAL
-              </span>
+              <div className="flex items-center justify-end gap-1 mb-0.5">
+                <span className="text-[10px] font-mono-num text-[#7d90a6] uppercase tracking-wider block">
+                  WEIGHTED MARGIN
+                </span>
+                <span className="text-[9px] font-mono-num px-1 py-0.2 rounded-xs bg-[#111723] border border-[#223046] text-[#f5b700]">
+                  TIER-NORM
+                </span>
+              </div>
               <span
                 className={`font-display text-2xl sm:text-4xl font-extrabold tracking-tight ${
-                  m.avgDiff >= 0 ? 'text-[#10b981]' : 'text-[#ff334b]'
+                  (m.weightedMargin ?? m.avgDiff) >= 0 ? 'text-[#10b981]' : 'text-[#ff334b]'
                 }`}
               >
-                {diffSign}
+                {m.weightedMargin !== undefined
+                  ? (m.weightedMargin >= 0 ? `+${m.weightedMargin}%` : `${m.weightedMargin}%`)
+                  : diffSign}
               </span>
               <span className="text-[10px] font-mono-num text-[#7d90a6] block">
-                {m.avgScoreUs} vs {m.avgScoreThem}
+                {diffSign} pts ({m.avgScoreUs} vs {m.avgScoreThem})
               </span>
             </div>
 
@@ -234,6 +251,11 @@ export default function MapCard({ mapData }) {
                       {rm.result === 'W' ? 'WIN' : 'LOSS'}
                     </span>
                     <span className="text-white font-bold">{rm.score_us} - {rm.score_them}</span>
+                    {rm.tier && (
+                      <span className="px-1.5 py-0.2 text-[10px] font-mono-num rounded-xs bg-[#f5b700]/15 text-[#f5b700] border border-[#f5b700]/30 font-semibold">
+                        {rm.tier}
+                      </span>
+                    )}
                     {rm.opponent && <span className="text-[#7d90a6]">vs {rm.opponent}</span>}
                   </div>
                   <span className="text-[11px] text-[#7d90a6]">{rm.played_at_raw || ''}</span>

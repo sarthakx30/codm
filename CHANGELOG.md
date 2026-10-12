@@ -4,6 +4,41 @@ All notable changes to the CODM Match Analytics Platform are documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-10-12
+
+### Tier Normalization & Cross-Mode Analytics Engine
+- **Cross-Mode Net Score Margin:**
+  - Implemented mode-neutral Net Score Share percentage in [tierAnalytics.js](file:///c:/Users/Sarthak/Projects/codm/client/src/engine/tierAnalytics.js) scaling from -100% to +100%.
+  - Normalized score differentials across Hardpoint (250 pts), Search & Destroy (rounds), and Control (rounds) into directly comparable metrics.
+- **Symmetric Tier Difficulty Scaling:**
+  - Calibrated tier difficulty scale: Tier 1 (`T1H: 1.62`, `T1M: 1.45`, `T1L: 1.28`), Tier 2 (`T2H: 1.12`, `T2M: 1.00`, `T2L: 0.88`), Tier 3 (`T3H: 0.72`, `T3M: 0.58`, `T3L: 0.44`).
+  - Implemented symmetric performance multipliers: rewards for good performances against top competition ($D$) are balanced by equal penalties for poor performances against lower tiers ($2.0 - D$).
+  - Prevents bad showings against elite teams from being overshadowed by stomping lower-tier teams.
+- **Tier-Weighted Map Intel & Rotation Status:**
+  - Replaced raw point differential with **WEIGHTED MARGIN** and **TIER-WT WIN%** in [mapsAnalytics.js](file:///c:/Users/Sarthak/Projects/codm/client/src/engine/mapsAnalytics.js) and [MapCard.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/maps/MapCard.jsx).
+  - Map status (`STRONGHOLD`, `CONTESTED`, `VULNERABLE`) is now determined by tier-weighted win rates and normalized margin thresholds.
+  - Added tier breakdown chips (e.g., `T2: 2W-1L`, `T3: 1W-0L`) and match tier badges on map cards.
+  - Added dedicated **Tier Filter Selector** (`ALL TIERS`, `TIER 1`, `TIER 2`, `TIER 3`) to [MapsTab.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/maps/MapsTab.jsx).
+- **Tier-Weighted Starting 5 Squad Roster:**
+  - Updated Map Performance Index (MPI) algorithm in [mapsAnalytics.js](file:///c:/Users/Sarthak/Projects/codm/client/src/engine/mapsAnalytics.js) to weight player K/D, scoring, hill time, and impact by opponent tier.
+  - Prioritizes high slaying efficiency and objective control against top-tier opponents over stats farmed against lower tiers.
+- **Pick/Ban Strategy Alignment:**
+  - Updated [mapVeto.js](file:///c:/Users/Sarthak/Projects/codm/client/src/engine/mapVeto.js) and [MapVetoTable.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/overview/MapVetoTable.jsx) with tier-weighted win rate and margin columns for draft recommendations.
+
+### Mandatory Subtier (H/M/L) Validation
+- **Removal of Generic Standalone Tiers:**
+  - Removed generic `T1`, `T2`, and `T3` entries from `TIER_DIFFICULTY` in [tierAnalytics.js](file:///c:/Users/Sarthak/Projects/codm/client/src/engine/tierAnalytics.js).
+- **UI & Modal Subtier Enforcement:**
+  - Enforced mandatory subtier (`High`, `Mid`, or `Low`) selection in [BatchUploadModal.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/upload/BatchUploadModal.jsx) and [MatchBannerCard.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/matches/MatchBannerCard.jsx).
+  - Added visual warning indicators and disabled save actions when a tier is selected without a subtier.
+  - Added validation guards in [MatchList.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/matches/MatchList.jsx) preventing bare tier saves.
+- **API & Schema Validation:**
+  - Added regex pattern `^(|[Tt][123][HhMmLl])$` in [schemas.py](file:///c:/Users/Sarthak/Projects/codm/server/app/schemas.py) rejecting standalone tiers on match save and update endpoints.
+
+### Versioning & Identity
+- **Title Card v1.4 Alignment:**
+  - Bumped version to **v1.4** in [version.js](file:///c:/Users/Sarthak/Projects/codm/client/src/config/version.js), reflected in [Header.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/common/Header.jsx) and [Sidebar.jsx](file:///c:/Users/Sarthak/Projects/codm/client/src/components/common/Sidebar.jsx).
+
 ---
 
 ## [1.3.0] - 2026-10-12

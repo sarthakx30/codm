@@ -1,10 +1,14 @@
 /**
  * Maps Analytics Engine
  * Computes mode-aware map statistics, win rates, individual player ratings,
- * and algorithmically verified starting 5 squad recommendations with diverse roles.
+ * tier-normalized performance margins, and starting 5 squad recommendations.
  */
-import { PALETTE } from '../config/theme';
-import { calculatePlayerStats } from './playerAnalytics.js';
+import { PALETTE } from '../config/theme.js';
+import { calculatePlayerStats, parseTier } from './playerAnalytics.js';
+import {
+  getTierDifficulty,
+  calculateMatchWeightedMargin
+} from './tierAnalytics.js';
 
 export function calculateMapsIntel(matches = []) {
   if (!matches || matches.length === 0) return [];
@@ -25,7 +29,11 @@ export function calculateMapsIntel(matches = []) {
         wins: 0,
         losses: 0,
         scoreUsTotal: 0,
-        scoreThemTotal: 0
+        scoreThemTotal: 0,
+        weightedMarginsTotal: 0,
+        effectiveWinsTotal: 0,
+        effectiveLossesTotal: 0,
+        tierBreakdown: {}
       });
     }
 
@@ -35,6 +43,23 @@ export function calculateMapsIntel(matches = []) {
     else group.losses++;
     group.scoreUsTotal += (m.score_us || 0);
     group.scoreThemTotal += (m.score_them || 0);
+
+    // Calculate match tier-normalized metrics
+    const matchIntel = calculateMatchWeightedMargin(m);
+    group.weightedMarginsTotal += matchIntel.weightedMarginPct;
+    group.effectiveWinsTotal += matchIntel.effectiveWinCredit;
+    group.effectiveLossesTotal += matchIntel.effectiveLossPenalty;
+
+    // Track tier breakdown
+    const tierClean = (m.tier || '').trim().toUpperCase();
+    const pt = parseTier(tierClean);
+    const tierCategory = pt.main || 'OTHER';
+    if (!group.tierBreakdown[tierCategory]) {
+      group.tierBreakdown[tierCategory] = { played: 0, wins: 0, losses: 0 };
+    }
+    group.tierBreakdown[tierCategory].played++;
+    if (m.result === 'W') group.tierBreakdown[tierCategory].wins++;
+    else group.tierBreakdown[tierCategory].losses++;
   });
 
   // Calculate detailed analytics for each map
@@ -47,8 +72,48 @@ export function calculateMapsIntel(matches = []) {
     const avgScoreThem = Math.round(group.scoreThemTotal / totalGames);
     const avgDiff = Math.round((group.scoreUsTotal - group.scoreThemTotal) / totalGames);
 
+    // Tier-Weighted Metrics:
+    const weightedMargin = totalGames > 0
+      ? Math.round((group.weightedMarginsTotal / totalGames) * 10) / 10
+      : 0;
+
+    const totalEffectiveDecisions = group.effectiveWinsTotal + group.effectiveLossesTotal;
+    const weightedWinRate = totalEffectiveDecisions > 0
+      ? Math.round((group.effectiveWinsTotal / totalEffectiveDecisions) * 100)
+      : winRate;
+
     // Player stats on this specific map
     const playerMapStats = calculatePlayerStats(group.matches);
+
+    // Map match records per player to calculate tier-weighted ratings
+    const playerTierStats = new Map();
+    group.matches.forEach(m => {
+      const diff = getTierDifficulty(m.tier);
+      (m.us || []).forEach(p => {
+        const name = p.name || '?';
+        if (!playerTierStats.has(name)) {
+          playerTierStats.set(name, {
+            weightedKdTotal: 0,
+            weightedScoreTotal: 0,
+            weightedHpTimeTotal: 0,
+            weightedImpactTotal: 0,
+            games: 0
+          });
+        }
+        const node = playerTierStats.get(name);
+        node.games++;
+        const pKills = p.kills || 0;
+        const pDeaths = p.deaths || 0;
+        const matchKd = pKills / Math.max(pDeaths, 1);
+        const kdMult = pKills >= pDeaths ? diff : (2.0 - diff);
+        node.weightedKdTotal += (matchKd * kdMult);
+        node.weightedScoreTotal += ((p.score || 0) * diff);
+        node.weightedHpTimeTotal += ((p.time || 0) * diff);
+        const pImpact = p.impact || 0;
+        const impactMult = pImpact >= 0 ? diff : (2.0 - diff);
+        node.weightedImpactTotal += (pImpact * impactMult);
+      });
+    });
 
     const isHP = group.mode.includes('HARDPOINT');
     const isSnD = group.mode.includes('SEARCH') || group.mode.includes('S&D');
@@ -64,22 +129,37 @@ export function calculateMapsIntel(matches = []) {
       const impact = Number(p.impact) || 0;
       const games = Number(p.games) || 1;
 
+      const tierNode = playerTierStats.get(p.name);
+      const weightedKd = tierNode && tierNode.games > 0
+        ? tierNode.weightedKdTotal / tierNode.games
+        : kd;
+      const weightedScore = tierNode && tierNode.games > 0
+        ? tierNode.weightedScoreTotal / tierNode.games
+        : avgScore;
+      const weightedHpTime = tierNode && tierNode.games > 0
+        ? tierNode.weightedHpTimeTotal / tierNode.games
+        : avgHpTime;
+      const weightedImpact = tierNode && tierNode.games > 0
+        ? tierNode.weightedImpactTotal / tierNode.games
+        : impact;
+
       let scoreWeight = 0;
       if (isHP) {
         // Hardpoint: Gunskill & Slaying (35%) + Hill Time & Zone Control (35%) + Score & Impact (30%)
-        scoreWeight = (kd * 35) + (kpm * 0.8) + (avgHpTime * 0.45) + (avgScore * 0.006) + (mvpCount * 8);
+        scoreWeight = (weightedKd * 35) + (kpm * 0.8) + (weightedHpTime * 0.45) + (weightedScore * 0.006) + (mvpCount * 8);
       } else if (isSnD) {
         // Search & Destroy: Round K/D & Survival (55%) + Impact & Opening Picks (45%)
-        scoreWeight = (kd * 55) + (kpm * 8) + (avgScore * 0.02) + (impact * 0.15) + (mvpCount * 10);
+        scoreWeight = (weightedKd * 55) + (kpm * 8) + (weightedScore * 0.02) + (weightedImpact * 0.15) + (mvpCount * 10);
       } else {
         // Control: Slaying & Lives (45%) + Point Capture & Pressure (55%)
-        scoreWeight = (kd * 40) + (kpm * 0.7) + (avgScore * 0.008) + (impact * 0.15) + (mvpCount * 8);
+        scoreWeight = (weightedKd * 40) + (kpm * 0.7) + (weightedScore * 0.008) + (weightedImpact * 0.15) + (mvpCount * 8);
       }
 
       return {
         name: p.name,
         games,
         kd,
+        weightedKd: Math.round(weightedKd * 100) / 100,
         kpm,
         apm,
         avgScore: Math.round(avgScore),
@@ -94,14 +174,13 @@ export function calculateMapsIntel(matches = []) {
     const top5Candidates = rankedPlayers.slice(0, 5);
 
     // Dynamic, Distinct Tactical Role Allocation across the 5 starters
-    // Ensures a balanced competitive roster: Primary Slayer, OBJ Anchor, Entry Fragger, Support Flex, Flex Operator
     const assignedRoles = new Map();
 
     // 1. Identify Primary Slayer (highest pure slaying power & kill efficiency)
     let bestSlayerPlayer = null;
     let maxSlay = -1;
     top5Candidates.forEach(p => {
-      const slayVal = (p.kd * 2.5) + (p.kpm * 0.1);
+      const slayVal = (p.weightedKd * 2.5) + (p.kpm * 0.1);
       if (slayVal > maxSlay) {
         maxSlay = slayVal;
         bestSlayerPlayer = p.name;
@@ -162,11 +241,11 @@ export function calculateMapsIntel(matches = []) {
     });
 
     // Build Optimal 5 starting roster with reasons
-    const optimalSquad = top5Candidates.map((p, idx) => {
+    const optimalSquad = top5Candidates.map((p) => {
       const role = assignedRoles.get(p.name) || 'FLEX OPERATOR';
       let reason = '';
       if (role === 'PRIMARY SLAYER') {
-        reason = `Top fragging efficiency (${p.kd.toFixed(2)} K/D, ${Math.round(p.kpm)} kills/game)`;
+        reason = `Top fragging efficiency (${p.weightedKd.toFixed(2)} Tier-Wt K/D, ${Math.round(p.kpm)} kills/game)`;
       } else if (role.includes('ANCHOR') || role.includes('CONTROLLER')) {
         reason = isHP
           ? `Top hill presence (${p.avgHpTime}s avg objective time)`
@@ -184,6 +263,7 @@ export function calculateMapsIntel(matches = []) {
         role,
         reason,
         kd: p.kd,
+        weightedKd: p.weightedKd,
         kpm: p.kpm,
         time: p.avgHpTime,
         avgScore: p.avgScore,
@@ -192,15 +272,17 @@ export function calculateMapsIntel(matches = []) {
       };
     });
 
-    // Map status determination
+    // Map status determination based on tier-weighted performance
     let status = 'CONTESTED';
     let statusColor = PALETTE.primary; // gold
-    if (winRate >= 70 && totalGames >= 2) {
-      status = 'STRONGHOLD';
-      statusColor = PALETTE.win; // emerald
-    } else if (winRate <= 35 && totalGames >= 2) {
-      status = 'VULNERABLE';
-      statusColor = PALETTE.loss; // crimson
+    if (totalGames >= 2) {
+      if (weightedWinRate >= 65 && weightedMargin >= 10) {
+        status = 'STRONGHOLD';
+        statusColor = PALETTE.win; // emerald
+      } else if (weightedWinRate <= 35 || weightedMargin <= -12) {
+        status = 'VULNERABLE';
+        statusColor = PALETTE.loss; // crimson
+      }
     }
 
     results.push({
@@ -210,11 +292,14 @@ export function calculateMapsIntel(matches = []) {
       wins: group.wins,
       losses: group.losses,
       winRate,
+      weightedWinRate,
       avgScoreUs,
       avgScoreThem,
       avgDiff,
+      weightedMargin,
       status,
       statusColor,
+      tierBreakdown: group.tierBreakdown,
       optimalSquad,
       allPlayers: rankedPlayers,
       recentMatches: group.matches.slice(0, 5)

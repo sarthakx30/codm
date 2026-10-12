@@ -28,7 +28,8 @@ export default function MapVetoTable({ vetoList }) {
               <th className="py-2 px-3 font-semibold">MAP - MODE</th>
               <th className="py-2 px-2 text-right font-semibold">PLAYED</th>
               <th className="py-2 px-2 text-right font-semibold">RECORD</th>
-              <th className="py-2 px-2 text-right font-semibold">WIN %</th>
+              <th className="py-2 px-2 text-right font-semibold">TIER-WT WIN%</th>
+              <th className="py-2 px-2 text-right font-semibold">WEIGHTED MARGIN</th>
               <th className="py-2 px-3 text-right font-semibold">RECOMMENDATION</th>
             </tr>
           </thead>
@@ -46,7 +47,19 @@ export default function MapVetoTable({ vetoList }) {
                     <span className="text-win">{item.wins}</span> -{' '}
                     <span className="text-loss">{item.losses}</span>
                   </td>
-                  <td className="py-2 px-2 text-right font-bold text-white">{item.winRate}%</td>
+                  <td className="py-2 px-2 text-right font-bold text-white">
+                    {item.weightedWinRate !== undefined ? `${item.weightedWinRate}%` : `${item.winRate}%`}
+                    <span className="text-[10px] text-[#7d90a6] font-normal block">{item.winRate}% raw</span>
+                  </td>
+                  <td
+                    className={`py-2 px-2 text-right font-bold ${
+                      (item.weightedMargin ?? 0) >= 0 ? 'text-[#10b981]' : 'text-[#ff334b]'
+                    }`}
+                  >
+                    {item.weightedMargin !== undefined
+                      ? (item.weightedMargin >= 0 ? `+${item.weightedMargin}%` : `${item.weightedMargin}%`)
+                      : `${item.avgDiff > 0 ? `+${item.avgDiff}` : item.avgDiff}`}
+                  </td>
                   <td className="py-2 px-3 text-right">
                     <span
                       className={`inline-block text-[11px] font-display font-bold px-2 py-0.5 border ${

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import MatchBannerCard from './MatchBannerCard';
 import { Layers, Sparkles } from 'lucide-react';
 import { THEME_CLASSES } from '../../config/theme';
+import { parseTier } from '../../engine/playerAnalytics.js';
 
 export default function MatchList({
   matches = [],
@@ -64,6 +65,13 @@ export default function MatchList({
 
   const handleSave = (matchId) => {
     const edits = editState[matchId];
+    if (edits?.tier) {
+      const pt = parseTier(edits.tier);
+      if (pt.main && !pt.sub) {
+        alert('Subtier (High, Mid, or Low) is mandatory when specifying an opponent tier. Plain T1, T2, or T3 is not permitted.');
+        return;
+      }
+    }
     if (edits && onUpdateMatch) {
       onUpdateMatch(matchId, edits);
     }

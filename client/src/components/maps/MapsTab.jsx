@@ -1,15 +1,42 @@
 import React, { useState, useMemo } from 'react';
 import MapCard from './MapCard';
 import { calculateMapsIntel } from '../../engine/mapsAnalytics';
+import { parseTier } from '../../engine/playerAnalytics';
 import { THEME_CLASSES } from '../../config/theme';
-import { Compass, Flame, Target, Shield, Filter } from 'lucide-react';
+import { Compass, Flame, Target, Shield, Filter, Layers } from 'lucide-react';
 
 export default function MapsTab({ matches = [] }) {
   const [selectedMode, setSelectedMode] = useState('ALL');
+  const [selectedTier, setSelectedTier] = useState('ALL');
 
-  const mapsIntel = useMemo(() => calculateMapsIntel(matches), [matches]);
+  // Tier filter counts
+  const tierCounts = useMemo(() => {
+    const counts = { 'ALL': matches.length, 'T1': 0, 'T2': 0, 'T3': 0 };
+    matches.forEach(m => {
+      const pt = parseTier(m.tier);
+      if (pt.main && counts[pt.main] !== undefined) {
+        counts[pt.main]++;
+      }
+    });
+    return counts;
+  }, [matches]);
 
-  // Mode categories
+  const tierFilterPills = [
+    { id: 'ALL', label: 'ALL TIERS', count: tierCounts['ALL'] },
+    { id: 'T1', label: 'TIER 1', count: tierCounts['T1'] },
+    { id: 'T2', label: 'TIER 2', count: tierCounts['T2'] },
+    { id: 'T3', label: 'TIER 3', count: tierCounts['T3'] }
+  ];
+
+  // Filter matches by selected tier first
+  const tierFilteredMatches = useMemo(() => {
+    if (selectedTier === 'ALL') return matches;
+    return matches.filter(m => parseTier(m.tier).main === selectedTier);
+  }, [matches, selectedTier]);
+
+  const mapsIntel = useMemo(() => calculateMapsIntel(tierFilteredMatches), [tierFilteredMatches]);
+
+  // Mode categories for tier-filtered subset
   const modeStats = useMemo(() => {
     const stats = {
       'HARDPOINT': { wins: 0, losses: 0, total: 0 },
@@ -17,7 +44,7 @@ export default function MapsTab({ matches = [] }) {
       'CONTROL': { wins: 0, losses: 0, total: 0 }
     };
 
-    matches.forEach(m => {
+    tierFilteredMatches.forEach(m => {
       const mode = (m.mode || '').toUpperCase();
       let target = null;
       if (mode.includes('HARDPOINT')) target = stats['HARDPOINT'];
@@ -32,7 +59,7 @@ export default function MapsTab({ matches = [] }) {
     });
 
     return stats;
-  }, [matches]);
+  }, [tierFilteredMatches]);
 
   // Group maps by mode
   const hardpointMaps = useMemo(() => mapsIntel.filter(m => m.mode.includes('HARDPOINT')), [mapsIntel]);
@@ -50,7 +77,7 @@ export default function MapsTab({ matches = [] }) {
     <div className="space-y-6 mb-10 animate-fadeIn">
       
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#223046] pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#223046] pb-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 flex items-center gap-2.5">
             <span className="w-1.5 h-5 bg-primary inline-block shadow-[0_0_8px_rgba(245,183,0,0.6)]"></span>
@@ -60,31 +87,63 @@ export default function MapsTab({ matches = [] }) {
             </span>
           </h2>
           <p className="text-xs font-mono-num text-[#7d90a6] m-0 mt-1">
-            Mode-specific map performance analytics and algorithmically recommended starting 5 lineups.
+            Mode-normalized margin and tier-weighted performance analytics. Bad performances against lower tiers are penalized symmetrically.
           </p>
         </div>
 
-        {/* Mode Filter Selector */}
-        <div className="flex items-center gap-1.5 bg-[#080c14] border border-[#223046] p-1 rounded-sm">
-          {modeFilterPills.map(pill => {
-            const isActive = selectedMode === pill.id;
-            return (
-              <button
-                key={pill.id}
-                onClick={() => setSelectedMode(pill.id)}
-                className={`px-3 py-1 text-xs font-display transition-all cursor-pointer rounded-xs flex items-center gap-1.5 ${
-                  isActive
-                    ? THEME_CLASSES.btnPrimary
-                    : 'text-[#7d90a6] hover:text-white'
-                }`}
-              >
-                <span>{pill.label}</span>
-                <span className={`text-[10px] font-mono-num ${isActive ? 'text-[#080c14]/80' : 'text-[#5a6b82]'}`}>
-                  ({pill.count})
-                </span>
-              </button>
-            );
-          })}
+        {/* Filter Controls: Tier Filter + Mode Filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Tier Filter Selector */}
+          <div className="flex items-center gap-1 bg-[#080c14] border border-[#223046] p-1 rounded-sm">
+            <span className="text-[10px] font-mono-num text-[#5a6b82] px-1 uppercase font-bold tracking-wider">
+              TIER:
+            </span>
+            {tierFilterPills.map(pill => {
+              const isActive = selectedTier === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  onClick={() => setSelectedTier(pill.id)}
+                  className={`px-2.5 py-1 text-xs font-display transition-all cursor-pointer rounded-xs flex items-center gap-1 ${
+                    isActive
+                      ? 'bg-[#f5b700] text-[#080c14] font-bold shadow-[0_0_8px_rgba(245,183,0,0.4)]'
+                      : 'text-[#7d90a6] hover:text-white'
+                  }`}
+                >
+                  <span>{pill.label}</span>
+                  <span className={`text-[10px] font-mono-num ${isActive ? 'text-[#080c14]/80' : 'text-[#5a6b82]'}`}>
+                    ({pill.count})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mode Filter Selector */}
+          <div className="flex items-center gap-1 bg-[#080c14] border border-[#223046] p-1 rounded-sm">
+            <span className="text-[10px] font-mono-num text-[#5a6b82] px-1 uppercase font-bold tracking-wider">
+              MODE:
+            </span>
+            {modeFilterPills.map(pill => {
+              const isActive = selectedMode === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  onClick={() => setSelectedMode(pill.id)}
+                  className={`px-2.5 py-1 text-xs font-display transition-all cursor-pointer rounded-xs flex items-center gap-1.5 ${
+                    isActive
+                      ? THEME_CLASSES.btnPrimary
+                      : 'text-[#7d90a6] hover:text-white'
+                  }`}
+                >
+                  <span>{pill.label}</span>
+                  <span className={`text-[10px] font-mono-num ${isActive ? 'text-[#080c14]/80' : 'text-[#5a6b82]'}`}>
+                    ({pill.count})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

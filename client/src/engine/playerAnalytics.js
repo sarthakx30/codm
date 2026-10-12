@@ -2,7 +2,7 @@
  * Player Performance & Role Classification Engine
  */
 
-import { PALETTE } from '../config/theme';
+import { PALETTE } from '../config/theme.js';
 
 export function parseTier(t = '') {
   const m = String(t || '').toUpperCase().match(/^(T[123])([HML])?$/);

@@ -244,7 +244,14 @@ export default function MatchBannerCard({
               <div>
                 <div className="flex justify-between items-center text-[#7d90a6] mb-1">
                   <span>Opponent Tier</span>
-                  <span className="text-[#f5b700] font-bold">{currentEdit.tier || 'None'}</span>
+                  <div className="flex items-center gap-1.5">
+                    {pt.main && !pt.sub && (
+                      <span className="text-[#ff334b] text-[10px] font-bold animate-pulse">
+                        SUBTIER REQUIRED
+                      </span>
+                    )}
+                    <span className="text-[#f5b700] font-bold">{currentEdit.tier || 'None'}</span>
+                  </div>
                 </div>
                 <div className="flex gap-1 mb-1">
                   {['T1', 'T2', 'T3', ''].map(val => {
@@ -254,7 +261,7 @@ export default function MatchBannerCard({
                         type="button"
                         key={val}
                         onClick={() => {
-                          const newTier = val ? `${val}${pt.sub || 'M'}` : '';
+                          const newTier = val ? `${val}${pt.sub || ''}` : '';
                           onFieldChange(m.id, 'tier', newTier);
                         }}
                         className={`flex-1 py-1 font-display text-xs border ${
@@ -268,26 +275,34 @@ export default function MatchBannerCard({
                     );
                   })}
                 </div>
-                {/* Subtier selector sorted High -> Mid -> Low */}
+                {/* Subtier selector sorted High -> Mid -> Low (Mandatory when tier is selected) */}
                 {pt.main && (
-                  <div className="flex gap-1">
-                    {['H', 'M', 'L'].map(sub => {
-                      const isActive = pt.sub === sub;
-                      return (
-                        <button
-                          type="button"
-                          key={sub}
-                          onClick={() => onFieldChange(m.id, 'tier', `${pt.main}${sub}`)}
-                          className={`flex-1 py-0.5 text-[11px] font-display border ${
-                            isActive
-                              ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15 font-bold'
-                              : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
-                          }`}
-                        >
-                          {sub === 'H' ? 'High' : sub === 'M' ? 'Mid' : 'Low'}
-                        </button>
-                      );
-                    })}
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] font-mono-num text-[#8292a8] mb-1">
+                      <span>Subtier (Mandatory):</span>
+                      {!pt.sub && (
+                        <span className="text-[#ff334b] font-bold animate-pulse">Pick H, M, or L *</span>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      {['H', 'M', 'L'].map(sub => {
+                        const isActive = pt.sub === sub;
+                        return (
+                          <button
+                            type="button"
+                            key={sub}
+                            onClick={() => onFieldChange(m.id, 'tier', `${pt.main}${sub}`)}
+                            className={`flex-1 py-1 text-xs font-display border transition-all ${
+                              isActive
+                                ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/25 font-bold shadow-[0_0_8px_rgba(245,183,0,0.3)]'
+                                : 'border-[#223046] text-[#7d90a6] bg-[#080c14] hover:border-[#f5b700]/50'
+                            }`}
+                          >
+                            {sub === 'H' ? 'High (H)' : sub === 'M' ? 'Mid (M)' : 'Low (L)'}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -323,8 +338,22 @@ export default function MatchBannerCard({
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#223046]">
               <button
                 type="button"
-                onClick={() => onSave(m.id)}
-                className={`flex-1 sm:flex-initial px-4 py-1.5 ${THEME_CLASSES.btnPrimary} text-xs clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
+                onClick={() => {
+                  if (currentEdit.tier) {
+                    const checkPt = parseTier(currentEdit.tier);
+                    if (checkPt.main && !checkPt.sub) {
+                      alert('Subtier (High, Mid, or Low) is mandatory when specifying an opponent tier. Plain T1, T2, or T3 is not permitted.');
+                      return;
+                    }
+                  }
+                  onSave(m.id);
+                }}
+                disabled={Boolean(pt.main && !pt.sub)}
+                className={`flex-1 sm:flex-initial px-4 py-1.5 ${
+                  pt.main && !pt.sub
+                    ? 'opacity-50 cursor-not-allowed bg-[#223046] text-[#7d90a6]'
+                    : THEME_CLASSES.btnPrimary
+                } text-xs clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
               >
                 <Save size={13} />
                 <span>SAVE DETAILS</span>

@@ -22,7 +22,7 @@ class MatchBase(BaseModel):
     played_at_raw: str = ""
     played_at: Optional[str] = None
     opponent: str = ""
-    tier: str = ""
+    tier: str = Field(default="", pattern=r"^(|[Tt][123][HhMmLl])$")
     game_type: str = ""
 
 class MatchCreate(MatchBase):
@@ -33,7 +33,7 @@ class MatchCreate(MatchBase):
 
 class MatchUpdate(BaseModel):
     opponent: Optional[str] = None
-    tier: Optional[str] = None
+    tier: Optional[str] = Field(default=None, pattern=r"^(|[Tt][123][HhMmLl])$")
     game_type: Optional[str] = None
 
 class MatchOut(MatchBase):
