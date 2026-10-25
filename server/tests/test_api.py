@@ -88,6 +88,36 @@ def test_blank_game_type_defaults_to_scrim(client):
     assert created["game_type"] == "scrim"
 
 
+def test_full_save_updates_map_mode_and_players(client):
+    created = create_match(client)
+    payload = make_match(match_id=created["id"])
+    payload["result"] = "W"
+    payload["score_us"] = 6
+    payload["score_them"] = 4
+    payload["mode"] = "snd"
+    payload["map"] = "Raid"
+    payload["us"][0]["kills"] = 20
+    payload["us"].append(make_player("Charlie", kills=15))
+
+    updated = create_match(client, payload)
+    assert updated["id"] == created["id"]
+    assert updated["added_at"] == created["added_at"]
+    assert updated["played_at"] == created["played_at"]
+    assert updated["result"] == "W"
+    assert updated["score_us"] == 6
+    assert updated["score_them"] == 4
+    assert updated["mode"] == "Search & Destroy"
+    assert updated["map"] == "Raid"
+
+    us = {player["name"]: player for player in updated["us"]}
+    assert len(us) == 3
+    assert us["Alpha"]["kills"] == 20
+    assert us["Charlie"]["kills"] == 15
+
+    listed = client.get("/api/matches").json()
+    assert len(listed) == 1
+
+
 def test_patch_match_metadata(client):
     created = create_match(client)
 

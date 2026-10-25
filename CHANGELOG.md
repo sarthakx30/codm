@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added one source of truth for tier, mode, match category, and scrim series format options.
 - Added a shared tier picker, mode picker, category picker, and responsive filter pills.
 - Added editable game mode to the Add Match review form and the match history editor.
+- Added full match editing in Match History. Edit result, score, map, mode, date, tier, category, opponent, and both rosters in one inline editor.
+- Player names and all player stats are editable. Add or remove players. One save writes the full match atomically.
+- Replaced the metadata-only editor with a focused editor. The expanded card now shows read-only rosters and Edit, Share, and Delete actions.
 - Added `mode` to the match update API. The API now accepts mode changes.
 - Made the map mode cards work as the mode filter. The separate mode pill row is removed.
 - Limited the tier filter to tiers that exist in the current data. The tier row scrolls on narrow screens.

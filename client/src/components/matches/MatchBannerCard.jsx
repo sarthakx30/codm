@@ -1,14 +1,12 @@
 import React from 'react';
 import MapBannerBackdrop from '../common/MapBannerBackdrop';
 import ScoreboardTable from './ScoreboardTable';
-import TierPicker from '../common/TierPicker';
-import ModePicker from '../common/ModePicker';
-import GameTypePicker from '../common/GameTypePicker';
-import { normalizeGameType, normalizeMode, normalizeTier, tierLabel } from '../../config/matchOptions';
+import MatchEditor from './MatchEditor';
+import { normalizeMode } from '../../config/matchOptions';
 import { THEME_CLASSES } from '../../config/theme';
 import {
   Trophy,
-  Save,
+  Pencil,
   Trash2,
   Sparkles,
   CheckSquare,
@@ -24,24 +22,18 @@ export default function MatchBannerCard({
   isSelectMode,
   isSelected,
   onToggleSelect,
-  editState,
-  onFieldChange,
-  onSave,
+  isEditing,
+  onEdit,
+  onCancelEdit,
+  onSaveMatch,
   onDelete,
-  onOpenScrimModal
+  onOpenScrimModal,
+  showToast
 }) {
   const m = match;
   const isWin = m.result === 'W';
   const scoreDiff = (m.score_us || 0) - (m.score_them || 0);
   const diffSign = scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`;
-
-  const currentEdit = editState || {
-    opponent: m.opponent || '',
-    tier: normalizeTier(m.tier),
-    mode: normalizeMode(m.mode),
-    game_type: normalizeGameType(m.game_type)
-  };
-  const editMode = normalizeMode(currentEdit.mode);
 
   // Top performer or MVP on our team
   const sortedPlayers = (m.us || []).slice().sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -79,9 +71,11 @@ export default function MatchBannerCard({
       <div
         onClick={() => {
           if (isSelectMode) onToggleSelect(m.id);
-          else onToggleExpand(m);
+          else if (!isEditing) onToggleExpand(m);
         }}
-        className="relative min-h-[96px] sm:min-h-[110px] p-4 flex items-center justify-between cursor-pointer select-none overflow-hidden"
+        className={`relative min-h-[96px] sm:min-h-[110px] p-4 flex items-center justify-between select-none overflow-hidden ${
+          isEditing ? 'cursor-default' : 'cursor-pointer'
+        }`}
       >
         {/* Shared Map Backdrop and Left Status Accent */}
         <MapBannerBackdrop
@@ -194,7 +188,9 @@ export default function MatchBannerCard({
             {/* Expand / Collapse Icon */}
             {!isSelectMode && (
               <div className="text-[#7d90a6] group-hover:text-white transition-colors">
-                {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                {isEditing
+                  ? <Pencil size={15} className="text-[#f5b700]" />
+                  : isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </div>
             )}
 
@@ -206,118 +202,66 @@ export default function MatchBannerCard({
       {/* Expanded Details Section */}
       {isExpanded && !isSelectMode && (
         <div className="p-4 border-t border-[#223046] bg-[#0c111a]/95 backdrop-blur-md animate-fadeIn">
-          {/* Rosters */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-            <div>
-              <div className="text-xs font-display text-[#f5b700] font-bold tracking-wider mb-1.5 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f5b700]" />
-                OUR TEAM ROSTER ({m.us?.length || 0})
+          {isEditing ? (
+            <MatchEditor
+              match={m}
+              onSave={onSaveMatch}
+              onCancel={onCancelEdit}
+              showToast={showToast}
+            />
+          ) : (
+            <>
+              {/* Actions */}
+              <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-[#223046]">
+                <button
+                  type="button"
+                  onClick={() => onEdit(m.id)}
+                  className={`flex-1 sm:flex-initial px-4 py-1.5 ${THEME_CLASSES.btnPrimary} text-xs clip-corner-sm flex items-center justify-center gap-1.5 cursor-pointer`}
+                >
+                  <Pencil size={13} />
+                  <span>EDIT MATCH</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onOpenScrimModal && onOpenScrimModal([m])}
+                  className={`flex-1 sm:flex-initial px-4 py-1.5 ${THEME_CLASSES.badgeGold} hover:bg-[#f5b700]/25 font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
+                >
+                  <Sparkles size={13} />
+                  <span>SHARE GRAPHIC</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onDelete(m.id)}
+                  className={`px-3 py-1.5 ${THEME_CLASSES.badgeLoss} hover:bg-[#ff334b]/25 font-display text-xs clip-corner-sm transition-all cursor-pointer ml-auto`}
+                  title="Delete Match"
+                >
+                  <Trash2 size={13} />
+                  <span>DELETE</span>
+                </button>
               </div>
-              <ScoreboardTable players={m.us} team="us" />
-            </div>
 
-            <div>
-              <div className="text-xs font-display text-[#ff334b] font-bold tracking-wider mb-1.5 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ff334b]" />
-                OPPONENT ROSTER ({m.them?.length || 0})
-              </div>
-              <ScoreboardTable players={m.them} team="them" />
-            </div>
-          </div>
-
-          {/* Match Metadata & Actions Bar */}
-          <div className="bg-[#161e2e] border border-[#223046] p-3.5 clip-corner-sm">
-            <div className="text-xs font-display text-[#ffd700] tracking-wider mb-2.5 font-bold">
-              EDIT MATCH METADATA
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono-num mb-3">
-              {/* Opponent Input */}
-              <div>
-                <label className="block text-[#7d90a6] mb-1">Opponent Clan / Team</label>
-                <input
-                  type="text"
-                  value={currentEdit.opponent}
-                  onChange={e => onFieldChange(m.id, 'opponent', e.target.value)}
-                  placeholder="e.g. Luminosity"
-                  className="w-full bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm focus:outline-none focus:border-[#f5b700]"
-                />
-              </div>
-
-              {/* Tier Selector */}
-              <div>
-                <div className="flex justify-between items-center text-[#7d90a6] mb-1">
-                  <span>Opponent Tier</span>
-                  <span className="text-[#f5b700] font-bold">{tierLabel(currentEdit.tier)}</span>
+              {/* Rosters */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4">
+                <div>
+                  <div className="text-xs font-display text-[#f5b700] font-bold tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#f5b700]" />
+                    OUR TEAM ROSTER ({m.us?.length || 0})
+                  </div>
+                  <ScoreboardTable players={m.us} />
                 </div>
-                <TierPicker
-                  value={currentEdit.tier}
-                  onChange={val => onFieldChange(m.id, 'tier', val)}
-                />
-              </div>
 
-              {/* Mode Selector */}
-              <div>
-                <div className="flex justify-between items-center text-[#7d90a6] mb-1">
-                  <span>Game Mode</span>
-                  {!editMode && (
-                    <span className="text-[#ff334b] text-[10px] font-bold">REQUIRED</span>
-                  )}
+                <div>
+                  <div className="text-xs font-display text-[#ff334b] font-bold tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ff334b]" />
+                    OPPONENT ROSTER ({m.them?.length || 0})
+                  </div>
+                  <ScoreboardTable players={m.them} />
                 </div>
-                <ModePicker
-                  value={currentEdit.mode}
-                  onChange={val => onFieldChange(m.id, 'mode', val)}
-                />
               </div>
-
-              {/* Category */}
-              <div>
-                <label className="block text-[#7d90a6] mb-1">Match Category</label>
-                <GameTypePicker
-                  value={currentEdit.game_type}
-                  onChange={val => onFieldChange(m.id, 'game_type', val)}
-                />
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#223046]">
-              <button
-                type="button"
-                onClick={() => onSave(m.id)}
-                disabled={!editMode}
-                title={editMode ? 'Save match metadata' : 'Select a game mode first'}
-                className={`flex-1 sm:flex-initial px-4 py-1.5 ${
-                  !editMode
-                    ? 'opacity-50 cursor-not-allowed bg-[#223046] text-[#7d90a6]'
-                    : `${THEME_CLASSES.btnPrimary} cursor-pointer`
-                } text-xs clip-corner-sm flex items-center justify-center gap-1.5 transition-all`}
-              >
-                <Save size={13} />
-                <span>SAVE DETAILS</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onOpenScrimModal && onOpenScrimModal([m])}
-                className={`flex-1 sm:flex-initial px-4 py-1.5 ${THEME_CLASSES.badgeGold} hover:bg-[#f5b700]/25 font-display font-bold text-xs tracking-wider clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
-              >
-                <Sparkles size={13} />
-                <span>SHARE GRAPHIC</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onDelete(m.id)}
-                className={`px-3 py-1.5 ${THEME_CLASSES.badgeLoss} hover:bg-[#ff334b]/25 font-display text-xs clip-corner-sm transition-all cursor-pointer ml-auto`}
-                title="Delete Match"
-              >
-                <Trash2 size={13} />
-                <span>DELETE</span>
-              </button>
-            </div>
-
-          </div>
+            </>
+          )}
         </div>
       )}
     </div>

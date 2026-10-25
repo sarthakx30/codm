@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import MatchBannerCard from './MatchBannerCard';
 import { Sparkles } from 'lucide-react';
 import { THEME_CLASSES } from '../../config/theme';
-import { normalizeGameType, normalizeMode, normalizeTier } from '../../config/matchOptions';
 
 export default function MatchList({
   matches = [],
-  onUpdateMatch,
+  onSaveMatch,
   onDeleteMatch,
   onOpenScrimModal,
   showToast
 }) {
   const [expandedId, setExpandedId] = useState(null);
-  const [editState, setEditState] = useState({});
+  const [editingId, setEditingId] = useState(null);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -37,48 +36,42 @@ export default function MatchList({
     });
   };
 
+  const toggleSelectMode = () => {
+    if (editingId) {
+      if (showToast) showToast('Save or cancel the current edit first.');
+      return;
+    }
+    setIsSelectMode(prev => !prev);
+    if (isSelectMode) setSelectedIds(new Set());
+  };
+
   const toggleExpand = (m) => {
     if (isSelectMode) {
       toggleSelectMatch(m.id);
       return;
     }
 
+    if (editingId && editingId !== m.id) {
+      if (showToast) showToast('Save or cancel the current edit first.');
+      return;
+    }
+
     if (expandedId === m.id) {
       setExpandedId(null);
+      setEditingId(null);
     } else {
       setExpandedId(m.id);
-      setEditState(prev => ({
-        ...prev,
-        [m.id]: {
-          opponent: m.opponent || '',
-          tier: normalizeTier(m.tier),
-          mode: normalizeMode(m.mode),
-          game_type: normalizeGameType(m.game_type)
-        }
-      }));
+      setEditingId(null);
     }
   };
 
-  const handleFieldChange = (matchId, field, val) => {
-    setEditState(prev => ({
-      ...prev,
-      [matchId]: {
-        ...prev[matchId],
-        [field]: val
-      }
-    }));
+  const handleEdit = (matchId) => {
+    setExpandedId(matchId);
+    setEditingId(matchId);
   };
 
-  const handleSave = (matchId) => {
-    const edits = editState[matchId];
-    if (edits && onUpdateMatch) {
-      onUpdateMatch(matchId, {
-        ...edits,
-        tier: normalizeTier(edits.tier),
-        mode: normalizeMode(edits.mode),
-        game_type: normalizeGameType(edits.game_type)
-      });
-    }
+  const handleCancelEdit = () => {
+    setEditingId(null);
   };
 
   const handleDelete = (matchId) => {
@@ -111,16 +104,16 @@ export default function MatchList({
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
-            onClick={() => {
-              setIsSelectMode(prev => !prev);
-              if (isSelectMode) setSelectedIds(new Set());
-            }}
-            className={`w-full sm:w-auto justify-center px-3 py-1.5 text-xs font-display flex items-center gap-1.5 border transition-all clip-corner-sm cursor-pointer ${
+            onClick={toggleSelectMode}
+            disabled={!!editingId}
+            className={`w-full sm:w-auto justify-center px-3 py-1.5 text-xs font-display flex items-center gap-1.5 border transition-all clip-corner-sm ${
+              editingId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            } ${
               isSelectMode
                 ? `${THEME_CLASSES.badgeGold} font-bold shadow-[0_0_10px_rgba(245,183,0,0.3)]`
                 : `${THEME_CLASSES.btnGhost}`
             }`}
-            title="Select 1-5 maps to compile a shareable Scrim Graphic Card"
+            title={editingId ? 'Save or cancel the current edit first' : 'Select 1-5 maps to compile a shareable Scrim Graphic Card'}
           >
             <Sparkles size={13} className={isSelectMode ? 'text-secondary' : 'text-primary'} />
             <span>{isSelectMode ? 'CANCEL SELECTION' : 'SELECT MAPS FOR CARD'}</span>
@@ -139,11 +132,13 @@ export default function MatchList({
             isSelectMode={isSelectMode}
             isSelected={selectedIds.has(m.id)}
             onToggleSelect={toggleSelectMatch}
-            editState={editState[m.id]}
-            onFieldChange={handleFieldChange}
-            onSave={handleSave}
+            isEditing={editingId === m.id}
+            onEdit={handleEdit}
+            onCancelEdit={handleCancelEdit}
+            onSaveMatch={onSaveMatch}
             onDelete={handleDelete}
             onOpenScrimModal={onOpenScrimModal}
+            showToast={showToast}
           />
         ))}
       </div>

@@ -110,14 +110,20 @@ export default function App() {
     loadMatches();
   }, [loadMatches]);
 
-  // Handle Match Updates and Deletions
-  const handleUpdateMatch = async (id, updates) => {
+  // Handle full match saves and deletions
+  const handleSaveFullMatch = async (matchData) => {
     try {
-      const updated = await api.updateMatch(id, updates);
-      setMatches(prev => prev.map(m => m.id === id ? updated : m));
-      showToast('Match details updated.');
+      const saved = await api.saveMatch(matchData);
+      setMatches(prev => (
+        prev.some(m => m.id === saved.id)
+          ? prev.map(m => (m.id === saved.id ? saved : m))
+          : [saved, ...prev]
+      ));
+      showToast('Match updated.');
+      return saved;
     } catch (err) {
-      showToast(`Update failed: ${err.message}`);
+      showToast(`Save failed: ${err.message}`);
+      return null;
     }
   };
 
@@ -207,7 +213,7 @@ export default function App() {
               <MatchList
                 key={filter}
                 matches={filteredMatches}
-                onUpdateMatch={handleUpdateMatch}
+                onSaveMatch={handleSaveFullMatch}
                 onDeleteMatch={handleDeleteMatch}
                 onOpenScrimModal={handleOpenScrimModal}
                 showToast={showToast}
