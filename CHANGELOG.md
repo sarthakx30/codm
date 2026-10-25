@@ -4,6 +4,26 @@ All notable changes to the CODM Match Analytics Platform are documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-10-26
+
+### Mobile Navigation & Phone Layout
+- Replaced the mobile slide-out sidebar with a fixed bottom pill navigation bar: Home, Maps, Matches, Players, Add.
+- Removed the mobile hamburger button. The desktop sidebar is unchanged.
+- Added a mobile header shortcut for the roster and alias manager.
+- Added safe-area padding for phones with notches and gesture bars.
+- Added bottom spacing to the main content so the navigation bar never covers the last card.
+- Improved small-screen spacing in the header, match scope filter, match history toolbar, match banner cards, and modal headers.
+- Stacked the player stat inputs in the Add Match screen into three columns on phones.
+- Added the missing fade, slide, and bottom-navigation entrance animations.
+- Added a hidden-scrollbar utility for horizontal chip rows.
+
+### Maintenance
+- Fixed Turso write operations. `Database.execute()` now returns the affected row count.
+- Moved Gemini OCR calls off the FastAPI event loop.
+- Added API smoke tests, `pytest.ini`, and `server/requirements-dev.txt`.
+- Fixed stale setup steps and file paths in `README.md`.
+- Unified the API and client version at `1.4.1`.
+
 ## [1.4.0] - 2026-10-12
 
 ### Tier Normalization & Cross-Mode Analytics Engine

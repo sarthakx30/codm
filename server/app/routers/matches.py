@@ -1,5 +1,5 @@
 """Match endpoints: list, create, update, delete."""
-from typing import Any, Dict, List
+from typing import List
 from fastapi import APIRouter, HTTPException, status
 from server.app.repositories import match_repo
 from server.app.schemas import MatchOut, MatchSaveRequest, MatchUpdate

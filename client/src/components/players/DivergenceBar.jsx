@@ -19,7 +19,6 @@ export default function DivergenceBar({ delta = 0, rating = 100, tag = 'PAR', co
   const isPositive = delta > 0;
   const isNegative = delta < 0;
   const isElite = delta >= 25;
-  const isAnchor = tag === 'ANCHOR';
 
   // Tooltip text showing component breakdown
   const tooltipText = componentDeltas

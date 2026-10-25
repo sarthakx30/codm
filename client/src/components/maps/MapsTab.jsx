@@ -3,7 +3,7 @@ import MapCard from './MapCard';
 import { calculateMapsIntel } from '../../engine/mapsAnalytics';
 import { parseTier } from '../../engine/playerAnalytics';
 import { THEME_CLASSES } from '../../config/theme';
-import { Compass, Flame, Target, Shield, Filter, Layers } from 'lucide-react';
+import { Flame, Target, Shield } from 'lucide-react';
 
 export default function MapsTab({ matches = [] }) {
   const [selectedMode, setSelectedMode] = useState('ALL');

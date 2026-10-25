@@ -28,8 +28,8 @@ class MatchBase(BaseModel):
 class MatchCreate(MatchBase):
     id: Optional[str] = None
     added_at: Optional[str] = None
-    us: List[PlayerSchema] = []
-    them: List[PlayerSchema] = []
+    us: List[PlayerSchema] = Field(default_factory=list)
+    them: List[PlayerSchema] = Field(default_factory=list)
 
 class MatchUpdate(BaseModel):
     opponent: Optional[str] = None
@@ -39,8 +39,8 @@ class MatchUpdate(BaseModel):
 class MatchOut(MatchBase):
     id: str
     added_at: str
-    us: List[PlayerSchema] = []
-    them: List[PlayerSchema] = []
+    us: List[PlayerSchema] = Field(default_factory=list)
+    them: List[PlayerSchema] = Field(default_factory=list)
 
 class MatchSaveRequest(BaseModel):
     match: MatchCreate

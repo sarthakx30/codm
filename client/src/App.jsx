@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
+import MobileNav from './components/common/MobileNav';
 import Toast from './components/common/Toast';
 import HonorsBanner from './components/overview/HonorsBanner';
 import RecordBox from './components/overview/RecordBox';
@@ -36,7 +37,6 @@ export default function App() {
   const [isWaking, setIsWaking] = useState(false);
   const [wakingMsg, setWakingMsg] = useState('');
   const [serverError, setServerError] = useState(false);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Modals for Scrim Graphic & Alias Manager
   const [isAliasModalOpen, setIsAliasModalOpen] = useState(false);
@@ -44,9 +44,15 @@ export default function App() {
   const [scrimMatches, setScrimMatches] = useState([]);
 
   // Show tactical toast
+  const toastTimer = useRef(null);
   const showToast = useCallback((msg) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 2200);
+    toastTimer.current = setTimeout(() => setToastMessage(''), 2200);
+  }, []);
+
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
   const handleOpenScrimModal = (matchesList) => {
@@ -107,7 +113,7 @@ export default function App() {
       setMatches(prev => prev.map(m => m.id === id ? updated : m));
       showToast('Match details updated.');
     } catch (err) {
-      alert(`Update failed: ${err.message}`);
+      showToast(`Update failed: ${err.message}`);
     }
   };
 
@@ -117,7 +123,7 @@ export default function App() {
       setMatches(prev => prev.filter(m => m.id !== id));
       showToast('Match deleted.');
     } catch (err) {
-      alert(`Delete failed: ${err.message}`);
+      showToast(`Delete failed: ${err.message}`);
     }
   };
 
@@ -146,12 +152,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#080c14] text-[#f0f4f8] flex flex-col antialiased selection:bg-[#f5b700]/30 selection:text-[#ffd700]">
       
-      {/* Responsive Unified Sidebar (Desktop persistent + Mobile drawer) */}
+      {/* Desktop Persistent Sidebar */}
       <Sidebar
         activeTab={activeTab}
         onTabChange={changeTab}
-        isMobileOpen={isMobileSidebarOpen}
-        onMobileClose={() => setIsMobileSidebarOpen(false)}
         isWaking={isWaking}
         wakingMsg={wakingMsg}
         matchCount={matches.length}
@@ -160,7 +164,7 @@ export default function App() {
 
       {/* Main Content Area: Expanded for Desktop (lg:pl-64 xl:pl-72) */}
       <div className="flex-1 flex flex-col lg:pl-64 xl:pl-72 transition-all">
-        <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 pb-10 lg:pb-12">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-12">
           
           <Header
             filter={filter}
@@ -170,7 +174,7 @@ export default function App() {
             onRefresh={loadMatches}
             loading={loading}
             serverError={serverError}
-            onToggleMobileMenu={() => setIsMobileSidebarOpen(true)}
+            onOpenAliasModal={() => setIsAliasModalOpen(true)}
           />
 
           {/* OVERVIEW TAB */}
@@ -266,6 +270,7 @@ export default function App() {
         showToast={showToast}
       />
 
+      <MobileNav activeTab={activeTab} onTabChange={changeTab} />
 
       <Toast message={toastMessage} />
     </div>

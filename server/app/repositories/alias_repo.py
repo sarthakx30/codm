@@ -13,16 +13,6 @@ async def get_all_alias_records() -> List[Dict[str, Any]]:
     """Retrieve all alias records with metadata."""
     return await db.fetch_all("SELECT raw_name, canonical_name, created_at FROM aliases ORDER BY canonical_name ASC, raw_name ASC")
 
-async def save_alias(raw_name: str, canonical_name: str) -> None:
-    """Save or update an alias mapping."""
-    now_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    sql = """
-    INSERT INTO aliases (raw_name, canonical_name, created_at)
-    VALUES (?, ?, ?)
-    ON CONFLICT(raw_name) DO UPDATE SET canonical_name=excluded.canonical_name;
-    """
-    await db.execute(sql, (raw_name.strip(), canonical_name.strip(), now_iso))
-
 async def save_aliases_batch(aliases_dict: Dict[str, str]) -> None:
     """Save or update multiple alias mappings atomically."""
     now_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -39,8 +29,7 @@ async def save_aliases_batch(aliases_dict: Dict[str, str]) -> None:
         await db.execute_batch(batch)
 
 async def delete_alias(raw_name: str) -> bool:
-    """Delete an alias mapping by raw_name."""
-    sql = "DELETE FROM aliases WHERE raw_name = ?"
-    await db.execute(sql, (raw_name.strip(),))
-    return True
+    """Delete an alias mapping by raw_name and report whether a row was removed."""
+    rows = await db.execute("DELETE FROM aliases WHERE raw_name = ?", (raw_name.strip(),))
+    return rows > 0
 

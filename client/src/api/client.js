@@ -40,7 +40,7 @@ async function request(endpoint, options = {}) {
         const errJson = await res.json();
         if (errJson.detail) errorMsg = errJson.detail;
         else if (errJson.error) errorMsg = errJson.error;
-      } catch (_) {}
+      } catch {}
       throw new Error(errorMsg);
     }
 

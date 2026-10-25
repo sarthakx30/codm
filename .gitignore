@@ -17,7 +17,6 @@ venv/
 
 # === Database ===
 database/codm.db
-database/migrate.py
 *.db
 *.sqlite
 *.sqlite3

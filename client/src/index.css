@@ -46,6 +46,7 @@
     background-size: 28px 28px;
     font-family: 'Rajdhani', -apple-system, sans-serif;
     color: var(--text-primary);
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
@@ -83,6 +84,52 @@
 
 .clip-pip {
   transform: skewX(-20deg);
+}
+
+/* Hide scrollbars on horizontal chip rows */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* View and navigation transitions */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes navUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out both;
+}
+
+.animate-slideRight {
+  animation: slideRight 0.22s ease-out both;
+}
+
+.animate-nav-up {
+  animation: navUp 0.25s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-slideRight,
+  .animate-nav-up {
+    animation: none;
+  }
 }
 
 /* Tactical glow utilities */

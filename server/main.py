@@ -1,20 +1,13 @@
 """Main FastAPI application entry point for CODM Analytics Platform."""
 import logging
-import sys
 from contextlib import asynccontextmanager
-from pathlib import Path
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Ensure root directory is in sys.path
-SERVER_DIR = Path(__file__).resolve().parent
-ROOT_DIR = SERVER_DIR.parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
 from database.connection import db
-from server.app.config import CORS_ORIGINS, PORT
+from server.app.config import APP_VERSION, CORS_ORIGINS, PORT
 from server.app.routers import aliases, health, matches, parse
 
 # Configure logging
@@ -29,14 +22,14 @@ async def lifespan(app: FastAPI):
     """Application startup and shutdown lifespan."""
     logger.info("Initializing database schema...")
     await db.init_schema()
-    logger.info(f"Database ready ({'Turso Cloud' if db._is_turso else 'Local SQLite'}).")
+    logger.info(f"Database ready ({'Turso Cloud' if db.is_turso else 'Local SQLite'}).")
     yield
     logger.info("Server shutting down.")
 
 app = FastAPI(
     title="CODM Match Analytics API",
     description="Esports analytics and match tracking API for Call of Duty: Mobile",
-    version="2.0.0",
+    version=APP_VERSION,
     lifespan=lifespan
 )
 
@@ -44,7 +37,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if "*" in CORS_ORIGINS else CORS_ORIGINS,
-    allow_credentials=True,
+    allow_credentials="*" not in CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -59,7 +52,7 @@ app.include_router(aliases.router, prefix="/api")
 async def root():
     return {
         "service": "CODM Match Analytics Platform API",
-        "version": "2.0.0",
+        "version": APP_VERSION,
         "docs": "/docs",
         "health": "/api/health"
     }

@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from database.connection import db
-from server.app.schemas import MatchCreate, MatchUpdate, PlayerSchema
+from server.app.schemas import MatchCreate, MatchUpdate
+from server.app.services.dedup import generate_match_fingerprint
 
 def _format_player(p: Dict[str, Any]) -> Dict[str, Any]:
     return {
@@ -15,6 +16,24 @@ def _format_player(p: Dict[str, Any]) -> Dict[str, Any]:
         "impact": int(p.get("impact") or 0),
         "time": int(p.get("time") or 0),
         "mvp": bool(p.get("mvp"))
+    }
+
+def _format_match(m: Dict[str, Any], us: List[Dict[str, Any]], them: List[Dict[str, Any]]) -> Dict[str, Any]:
+    return {
+        "id": m["id"],
+        "result": m["result"],
+        "score_us": m["score_us"],
+        "score_them": m["score_them"],
+        "mode": m["mode"],
+        "map": m["map"],
+        "played_at_raw": m["played_at_raw"],
+        "played_at": m["played_at"],
+        "added_at": m["added_at"],
+        "opponent": m["opponent"],
+        "tier": m["tier"],
+        "game_type": m["game_type"],
+        "us": us,
+        "them": them
     }
 
 async def get_all_matches() -> List[Dict[str, Any]]:
@@ -38,22 +57,7 @@ async def get_all_matches() -> List[Dict[str, Any]]:
     for m in matches:
         mid = m["id"]
         roster = players_by_match.get(mid, {"us": [], "them": []})
-        result.append({
-            "id": mid,
-            "result": m["result"],
-            "score_us": m["score_us"],
-            "score_them": m["score_them"],
-            "mode": m["mode"],
-            "map": m["map"],
-            "played_at_raw": m["played_at_raw"],
-            "played_at": m["played_at"],
-            "added_at": m["added_at"],
-            "opponent": m["opponent"],
-            "tier": m["tier"],
-            "game_type": m["game_type"],
-            "us": roster["us"],
-            "them": roster["them"]
-        })
+        result.append(_format_match(m, roster["us"], roster["them"]))
     return result
 
 async def get_match_by_id(match_id: str) -> Optional[Dict[str, Any]]:
@@ -64,28 +68,18 @@ async def get_match_by_id(match_id: str) -> Optional[Dict[str, Any]]:
     players = await db.fetch_all("SELECT * FROM match_players WHERE match_id = ? ORDER BY score DESC", (match_id,))
     us = [_format_player(p) for p in players if p["team"] == "us"]
     them = [_format_player(p) for p in players if p["team"] == "them"]
-    return {
-        "id": m["id"],
-        "result": m["result"],
-        "score_us": m["score_us"],
-        "score_them": m["score_them"],
-        "mode": m["mode"],
-        "map": m["map"],
-        "played_at_raw": m["played_at_raw"],
-        "played_at": m["played_at"],
-        "added_at": m["added_at"],
-        "opponent": m["opponent"],
-        "tier": m["tier"],
-        "game_type": m["game_type"],
-        "us": us,
-        "them": them
-    }
+    return _format_match(m, us, them)
 
-async def save_match(match: MatchCreate, renames: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+async def save_match(match: MatchCreate, renames: Optional[Dict[str, str]] = None) -> Optional[Dict[str, Any]]:
     """Insert or upsert a match, its player rosters, and aliases atomically."""
     now_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
     added_at = match.added_at or now_iso
-    match_id = match.id
+    match_id = match.id or generate_match_fingerprint(
+        match.played_at_raw,
+        match.score_us,
+        match.score_them,
+        [p.model_dump() for p in match.us]
+    )
 
     match_sql = """
     INSERT INTO matches (id, result, score_us, score_them, mode, map, played_at_raw, played_at, added_at, opponent, tier, game_type)
@@ -143,18 +137,16 @@ async def save_match(match: MatchCreate, renames: Optional[Dict[str, str]] = Non
     return await get_match_by_id(match_id)
 
 async def update_match_metadata(match_id: str, update: MatchUpdate) -> Optional[Dict[str, Any]]:
-    """Update match metadata (opponent, tier, game_type)."""
-    existing = await get_match_by_id(match_id)
-    if not existing:
-        return None
-
-    opponent = update.opponent if update.opponent is not None else existing["opponent"]
-    tier = update.tier if update.tier is not None else existing["tier"]
-    game_type = update.game_type if update.game_type is not None else existing["game_type"]
-
+    """Update match metadata (opponent, tier, game_type) in one statement."""
     await db.execute(
-        "UPDATE matches SET opponent = ?, tier = ?, game_type = ? WHERE id = ?",
-        (opponent, tier, game_type, match_id)
+        """
+        UPDATE matches
+        SET opponent = COALESCE(?, opponent),
+            tier = COALESCE(?, tier),
+            game_type = COALESCE(?, game_type)
+        WHERE id = ?
+        """,
+        (update.opponent, update.tier, update.game_type, match_id)
     )
     return await get_match_by_id(match_id)
 

@@ -1,6 +1,6 @@
 """Alias endpoints: list, save, and delete player aliases."""
 from typing import Any, Dict, List
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 from server.app.repositories import alias_repo
 
 router = APIRouter(prefix="/aliases", tags=["Aliases"])
@@ -24,5 +24,7 @@ async def update_aliases(aliases: Dict[str, str]):
 @router.delete("/{raw_name}", status_code=status.HTTP_200_OK)
 async def delete_alias(raw_name: str):
     """Delete a raw name to canonical name alias mapping."""
-    await alias_repo.delete_alias(raw_name)
+    deleted = await alias_repo.delete_alias(raw_name)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alias not found")
     return {"deleted": True, "raw_name": raw_name}

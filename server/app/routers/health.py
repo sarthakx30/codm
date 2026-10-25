@@ -21,5 +21,5 @@ async def check_health():
         timestamp=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         db_latency_ms=round(latency_ms, 2),
         matches_count=matches_count,
-        database_type="turso" if db._is_turso else "sqlite"
+        database_type="turso" if db.is_turso else "sqlite"
     )

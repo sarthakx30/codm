@@ -14,7 +14,7 @@ codm/
 ├── database/                    # [DATABASE LAYER]
 │   ├── schema.sql               # Relational DDL (matches, match_players, aliases, indexes)
 │   ├── connection.py            # Unified Turso (libSQL) & local SQLite connection driver
-│   └── codm.db                  # Normalized local SQLite database (23 matches, 217 players)
+│   └── codm.db                  # Local SQLite file (created on first start, git-ignored)
 │
 ├── server/                      # [SERVER LAYER] FastAPI Backend
 │   ├── app/
@@ -24,7 +24,9 @@ codm/
 │   │   ├── services/            # Gemini OCR vision model & SHA-1 deduplication
 │   │   └── routers/             # API routes (/api/health, /api/matches, /api/parse, /api/aliases)
 │   ├── main.py                  # FastAPI app entry point with CORS middleware
-│   ├── requirements.txt         # Locked Python dependencies
+│   ├── tests/                   # Pytest API smoke tests
+│   ├── requirements.txt         # Python dependencies (minimum versions)
+│   ├── requirements-dev.txt     # Test dependencies
 │   └── .env.example             # Server environment variables template
 │
 └── client/                      # [CLIENT LAYER] React + Vite + Tailwind CSS
@@ -33,8 +35,8 @@ codm/
     │   ├── api/client.js        # API client with Render cold-start detection (>2s indicator)
     │   ├── engine/              # Esport analytics (14-day honors, slay-to-win, map veto, roles)
     │   ├── components/          # Tactical cyber/carbon UI modules (Overview, Players, Matches, Upload)
-    │   ├── styles/index.css     # Tactical design system (Dark slate, Neon Cyan, Gold, Crimson)
-    │   ├── App.jsx              # Main SPA layout with HashRouter compatibility
+    │   ├── index.css            # Tactical design system (Dark slate, Neon Cyan, Gold, Crimson)
+    │   ├── App.jsx              # Main SPA layout with hash-based navigation
     │   └── main.jsx             # React DOM root
     ├── vite.config.js           # Vite config with Tailwind CSS and /api dev proxy
     └── package.json
@@ -71,26 +73,35 @@ codm/
 - Python 3.10+
 - Node.js 18+ and npm
 
-### Step 1: Database Migration (Local SQLite)
+### Step 1: Configure the Backend
 ```bash
-python database/migrate.py
+cp server/.env.example server/.env
 ```
-*Initializes `database/codm.db` and migrates all 23 historical matches from `data.json`.*
+*Set `GEMINI_API_KEY` in `server/.env`. The Turso values are optional. Without them, the API uses a local SQLite file.*
 
 ### Step 2: Start the FastAPI Backend
 ```bash
 python -m pip install -r server/requirements.txt
 python -m uvicorn server.main:app --port 8000 --reload
 ```
-*API runs at `http://127.0.0.1:8000`. Interactive OpenAPI documentation available at `http://127.0.0.1:8000/docs`.*
+*API runs at `http://127.0.0.1:8000`. Interactive OpenAPI documentation is available at `http://127.0.0.1:8000/docs`.*
+*The server creates `database/codm.db` and its tables on the first start. The file is ignored by git.*
 
 ### Step 3: Start the React Frontend
 ```bash
 cd client
+cp .env.example .env
 npm install
 npm run dev
 ```
 *Frontend runs at `http://127.0.0.1:5173/` and proxies all `/api/*` requests to port 8000.*
+
+### Step 4: Run the Backend Tests
+```bash
+python -m pip install -r server/requirements-dev.txt
+pytest
+```
+*Tests use a temporary SQLite file. They do not touch `database/codm.db`.*
 
 ---
 
@@ -104,15 +115,12 @@ npm run dev
    turso db show --url codm-db
    turso db tokens create codm-db
    ```
-3. Run the migration to upload your historical data to the cloud:
-   ```bash
-   python database/migrate.py --url "libsql://codm-db-<your-org>.turso.io" --token "<your-token>"
-   ```
+3. The server creates the schema on the first start. The repository has no data migration script. Import historical rows with your own script or the Turso CLI.
 
 ### B. Backend: Render (Free Web Service)
 1. Create a new **Web Service** on [Render](https://render.com) pointing to your repository.
 2. Settings:
-   - **Root Directory**: `server` (or run from root)
+   - **Root Directory**: leave empty (repository root). The commands below use the `server` package.
    - **Build Command**: `pip install -r server/requirements.txt`
    - **Start Command**: `uvicorn server.main:app --host 0.0.0.0 --port $PORT`
 3. Environment Variables:
@@ -132,4 +140,4 @@ npm run dev
    cd client
    npm run build
    ```
-3. Deploy the `client/dist/` directory to your repository's `gh-pages` branch. The app uses `HashRouter` navigation, ensuring 100% routing stability without 404 rewrite issues.
+3. Deploy the `client/dist/` directory to your repository's `gh-pages` branch. The app uses hash-based navigation, so routes do not need a server rewrite rule.

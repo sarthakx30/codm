@@ -21,14 +21,20 @@ class Database:
             raw_url = raw_url.replace("libsql://", "https://")
         self.db_url = raw_url
 
+    @property
+    def is_turso(self) -> bool:
+        """Return True when the database is hosted on Turso."""
+        return self._is_turso
+
     def get_sqlite_conn(self) -> sqlite3.Connection:
         """Create a local sqlite3 connection with dict-like row factory and foreign keys enabled."""
-        db_file = str(DEFAULT_LOCAL_DB)
+        db_file = os.environ.get("CODM_DB_PATH") or str(DEFAULT_LOCAL_DB)
         if self.db_url and self.db_url.startswith("file:"):
             db_file = self.db_url.replace("file:", "")
-        conn = sqlite3.connect(db_file, check_same_thread=False)
+        conn = sqlite3.connect(db_file, timeout=10, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
+        conn.execute("PRAGMA busy_timeout = 5000;")
         return conn
 
     async def init_schema(self) -> None:
@@ -54,7 +60,8 @@ class Database:
             params = []
         if self._is_turso:
             async with libsql_client.create_client(self.db_url, auth_token=self.auth_token) as client:
-                return await client.execute(query, params)
+                result = await client.execute(query, params)
+                return result.rows_affected
         else:
             conn = self.get_sqlite_conn()
             try:
@@ -66,7 +73,7 @@ class Database:
                 conn.close()
 
     async def execute_batch(self, statements: List[tuple]) -> None:
-        """Execute multiple (query, params) statements in a transaction."""
+        """Execute multiple (query, params) statements in one transaction."""
         if self._is_turso:
             async with libsql_client.create_client(self.db_url, auth_token=self.auth_token) as client:
                 batch_stmts = [
@@ -77,10 +84,10 @@ class Database:
         else:
             conn = self.get_sqlite_conn()
             try:
-                cursor = conn.cursor()
-                for q, p in statements:
-                    cursor.execute(q, p)
-                conn.commit()
+                with conn:
+                    cursor = conn.cursor()
+                    for q, p in statements:
+                        cursor.execute(q, p)
             finally:
                 conn.close()
 

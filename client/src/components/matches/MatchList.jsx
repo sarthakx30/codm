@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import MatchBannerCard from './MatchBannerCard';
-import { Layers, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { THEME_CLASSES } from '../../config/theme';
 import { parseTier } from '../../engine/playerAnalytics.js';
 
@@ -93,9 +93,9 @@ export default function MatchList({
   return (
     <div className="space-y-4 mb-10">
       {/* Header matching user reference inspiration */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 flex items-center gap-2.5">
+          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 flex flex-wrap items-center gap-2.5">
             <span className="w-1.5 h-5 bg-primary inline-block shadow-[0_0_8px_rgba(245,183,0,0.6)]"></span>
             MATCH HISTORY
             <span className="text-xs font-mono-num font-normal text-[#7d90a6] bg-[#111723] px-2 py-0.5 rounded border border-[#223046]">
@@ -104,14 +104,14 @@ export default function MatchList({
           </h2>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => {
               setIsSelectMode(prev => !prev);
               if (isSelectMode) setSelectedIds(new Set());
             }}
-            className={`px-3 py-1.5 text-xs font-display flex items-center gap-1.5 border transition-all clip-corner-sm cursor-pointer ${
+            className={`w-full sm:w-auto justify-center px-3 py-1.5 text-xs font-display flex items-center gap-1.5 border transition-all clip-corner-sm cursor-pointer ${
               isSelectMode
                 ? `${THEME_CLASSES.badgeGold} font-bold shadow-[0_0_10px_rgba(245,183,0,0.3)]`
                 : `${THEME_CLASSES.btnGhost}`

@@ -1,8 +1,15 @@
 """Parse endpoint: accepts match screenshot and returns extracted structured data."""
+import logging
+
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
+
+from server.app.config import MAX_UPLOAD_BYTES
 from server.app.repositories import alias_repo, match_repo
 from server.app.schemas import ParseResponse
 from server.app.services.gemini_ocr import parse_scoreboard_image
+
+logger = logging.getLogger("codm.parse")
 
 router = APIRouter(prefix="/parse", tags=["OCR Ingestion"])
 
@@ -34,20 +41,30 @@ async def parse_screenshot(request: Request, file: UploadFile = File(None)):
             detail="No screenshot image data provided. Send as multipart form-data or raw image bytes."
         )
 
-    if len(image_bytes) > 15_000_000:
+    if len(image_bytes) > MAX_UPLOAD_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="Image exceeds 15MB limit"
+            detail=f"Image exceeds {MAX_UPLOAD_BYTES // 1_000_000}MB limit"
         )
 
     aliases = await alias_repo.get_all_aliases()
 
     try:
-        parsed_match = parse_scoreboard_image(image_bytes, mime_type=mime, aliases=aliases)
+        # The Gemini client is synchronous. Run it off the event loop.
+        parsed_match = await run_in_threadpool(
+            parse_scoreboard_image,
+            image_bytes,
+            mime_type=mime,
+            aliases=aliases
+        )
     except RuntimeError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"OCR error: {e}")
+        logger.exception("Unexpected OCR failure")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OCR failed. Check the server logs."
+        ) from e
 
     # Check for duplicate
     existing = await match_repo.get_match_by_id(parsed_match["id"])

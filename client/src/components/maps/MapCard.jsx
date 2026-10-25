@@ -2,17 +2,9 @@ import React, { useState } from 'react';
 import MapBannerBackdrop from '../common/MapBannerBackdrop';
 import { THEME_CLASSES } from '../../config/theme';
 import {
-  Users,
-  Shield,
-  Trophy,
-  Flame,
   ChevronDown,
   ChevronUp,
-  Target,
-  Clock,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle
+  Sparkles
 } from 'lucide-react';
 
 export default function MapCard({ mapData }) {

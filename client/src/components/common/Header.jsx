@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, Radio, AlertOctagon, Menu } from 'lucide-react';
+import { RefreshCw, Radio, AlertOctagon, Tag } from 'lucide-react';
 import { APP_VERSION } from '../../config/version';
 import { THEME_CLASSES } from '../../config/theme';
 
@@ -11,45 +11,43 @@ export default function Header({
   onRefresh,
   loading,
   serverError,
-  onToggleMobileMenu
+  onOpenAliasModal
 }) {
   return (
     <header className="mb-6 border-b border-[#243044] pb-4">
       {/* Top Meta Bar */}
-      <div className="flex items-center justify-between text-[11px] tracking-wider text-[#8292a8] font-mono-num mb-2">
-        <div className="flex items-center gap-2">
-          {/* Mobile hamburger menu button */}
-          <button
-            onClick={onToggleMobileMenu}
-            className="lg:hidden flex items-center gap-1.5 px-2 py-1 bg-[#111622] hover:bg-[#171f2e] border border-[#384864] hover:border-[#f5b700] text-white rounded-xs transition-all cursor-pointer mr-1 shadow-[0_0_8px_rgba(245,183,0,0.15)] active:scale-95"
-            title="Open Menu"
-            aria-label="Open Navigation Menu"
-          >
-            <Menu size={16} className="text-[#f5b700]" />
-            <span className="text-[10px] font-display font-bold tracking-wider text-white">MENU</span>
-          </button>
-
+      <div className="flex items-center justify-between gap-2 text-[11px] tracking-wider text-[#8292a8] font-mono-num mb-2">
+        <div className="flex items-center gap-2 min-w-0">
           {serverError ? (
             <>
-              <span className="inline-block w-2 h-2 rounded-full bg-[#ff334b] animate-ping"></span>
+              <span className="inline-block w-2 h-2 shrink-0 rounded-full bg-[#ff334b] animate-ping"></span>
               <span className="text-[#ff334b] font-bold">OFFLINE</span>
             </>
           ) : (
             <>
-              <span className="inline-block w-2 h-2 rounded-full bg-[#f5b700] animate-pulse shadow-[0_0_8px_#f5b700]"></span>
-              <span className="text-white font-semibold">CALL OF DUTY: MOBILE</span>
+              <span className="inline-block w-2 h-2 shrink-0 rounded-full bg-[#f5b700] animate-pulse shadow-[0_0_8px_#f5b700]"></span>
+              <span className="text-white font-semibold truncate">CALL OF DUTY: MOBILE</span>
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className={serverError ? 'text-[#ff334b]' : 'text-[#f5b700] font-bold'}>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`hidden sm:inline ${serverError ? 'text-[#ff334b]' : 'text-[#f5b700] font-bold'}`}>
             {serverError ? 'SYSTEM OFFLINE' : 'DATABASE // SYNCED'}
           </span>
           <button
+            onClick={onOpenAliasModal}
+            className="lg:hidden flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#243044] hover:border-[#f5b700] hover:text-[#f5b700] transition-colors cursor-pointer text-white text-xs font-mono-num active:scale-95"
+            title="Roster & Aliases"
+            aria-label="Manage roster and aliases"
+          >
+            <Tag size={11} />
+            <span className="hidden sm:inline">ALIASES</span>
+          </button>
+          <button
             onClick={onRefresh}
             disabled={loading}
-            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded border border-[#243044] hover:border-[#f5b700] hover:text-[#f5b700] transition-colors disabled:opacity-50 cursor-pointer text-white text-xs font-mono-num"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#243044] hover:border-[#f5b700] hover:text-[#f5b700] transition-colors disabled:opacity-50 cursor-pointer text-white text-xs font-mono-num active:scale-95"
             title="Refresh Match Data"
           >
             <RefreshCw size={11} className={loading ? 'animate-spin text-[#f5b700]' : ''} />
@@ -61,7 +59,7 @@ export default function Header({
       {/* Main Title & Gold Gradient Accent */}
       <div className="flex items-end justify-between flex-wrap gap-2">
         <div className="flex flex-col">
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
             <h1 className="text-3xl sm:text-5xl font-extrabold font-display tracking-wider text-white drop-shadow-[0_0_20px_rgba(245,183,0,0.35)] flex items-baseline gap-2">
               <span>HORIZON</span>
               <span className="text-lg sm:text-2xl font-mono-num font-bold text-[#f5b700] tracking-wider uppercase">
@@ -99,9 +97,9 @@ export default function Header({
       )}
 
       {/* Filter Scope Bar */}
-      <div className="mt-4 flex items-center justify-between bg-[#111622] border border-[#243044] px-3.5 py-2 clip-corner-sm">
+      <div className="mt-4 flex flex-col gap-2 bg-[#111622] border border-[#243044] px-3.5 py-2 clip-corner-sm sm:flex-row sm:items-center sm:justify-between">
         <span className="text-xs font-display text-[#8292a8] tracking-wider">MATCH SCOPE</span>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 w-full sm:w-auto">
           {[
             { id: '', label: 'ALL MATCHES' },
             { id: 'scrim', label: 'SCRIMS' },
@@ -110,7 +108,7 @@ export default function Header({
             <button
               key={opt.id}
               onClick={() => onFilterChange(opt.id)}
-              className={`px-3 py-1 text-xs font-display transition-all ${
+              className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-1 text-[11px] sm:text-xs font-display text-center transition-all active:scale-95 ${
                 filter === opt.id
                   ? THEME_CLASSES.btnPrimary
                   : 'text-[#8292a8] hover:text-white border border-transparent'

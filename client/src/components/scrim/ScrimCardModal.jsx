@@ -4,12 +4,7 @@ import {
   Copy,
   Check,
   X,
-  Sparkles,
-  Trophy,
-  Swords,
-  Flame,
-  Calendar,
-  Layers
+  Swords
 } from 'lucide-react';
 import { PALETTE, THEME_CLASSES } from '../../config/theme';
 
@@ -621,26 +616,27 @@ export default function ScrimCardModal({
       <div className="bg-[#0c111a] border border-[#223046] w-full max-w-5xl max-h-[92vh] flex flex-col clip-corner shadow-[0_0_60px_rgba(0,0,0,0.9)] relative">
         
         {/* Modal Header */}
-        <div className="p-4 border-b border-[#223046] flex items-center justify-between bg-[#111723]/95">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#f5b700]/10 border border-[#f5b700]/30 flex items-center justify-center text-[#f5b700]">
+        <div className="p-3 sm:p-4 border-b border-[#223046] flex items-center justify-between gap-2 bg-[#111723]/95">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="hidden sm:flex w-8 h-8 shrink-0 rounded bg-[#f5b700]/10 border border-[#f5b700]/30 items-center justify-center text-[#f5b700]">
               <Swords size={18} />
             </div>
-            <div>
-              <h2 className="text-base font-display font-bold text-white tracking-wider m-0 flex items-center gap-2">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-display font-bold text-white tracking-wider m-0 flex flex-wrap items-center gap-2 leading-tight">
                 SCRIM SERIES GRAPHIC GENERATOR
                 <span className="text-[10px] font-mono-num bg-[#f5b700]/15 text-[#ffd700] px-1.5 py-0.5 rounded border border-[#f5b700]/30 font-bold">
                   {selectedMatches.length} MAPS
                 </span>
               </h2>
-              <p className="text-[11px] font-mono-num text-[#7d90a6] m-0">
+              <p className="hidden sm:block text-[11px] font-mono-num text-[#7d90a6] m-0">
                 Generate high-resolution Discord & Twitter esports summary cards
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-[#7d90a6] hover:text-white hover:bg-[#161e2e] transition-colors rounded"
+            aria-label="Close scrim card generator"
+            className="p-1.5 shrink-0 text-[#7d90a6] hover:text-white hover:bg-[#161e2e] transition-colors rounded"
           >
             <X size={20} />
           </button>

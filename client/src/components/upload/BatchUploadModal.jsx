@@ -547,7 +547,7 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                       </div>
 
                       {/* Stat inputs */}
-                      <div className="grid grid-cols-6 gap-1 font-mono-num text-center">
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 font-mono-num text-center">
                         <div>
                           <span className="block text-[9px] text-[#7d90a6]">SCORE</span>
                           <input

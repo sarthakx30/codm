@@ -2,7 +2,7 @@ import React from 'react';
 import MapBannerBackdrop from '../common/MapBannerBackdrop';
 import ScoreboardTable from './ScoreboardTable';
 import { parseTier } from '../../engine/playerAnalytics';
-import { THEME_CLASSES, PALETTE } from '../../config/theme';
+import { THEME_CLASSES } from '../../config/theme';
 import {
   Trophy,
   Save,
@@ -56,7 +56,7 @@ export default function MatchBannerCard({
           minute: '2-digit',
           hour12: false
         });
-      } catch (_) {}
+      } catch {}
     }
     return m.played_at_raw || '';
   })();
@@ -95,7 +95,7 @@ export default function MatchBannerCard({
         <div className="relative z-10 w-full flex items-center justify-between gap-3">
           
           {/* Left: Checkbox (in select mode) + Metadata + Map Name */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {isSelectMode && (
               <div className="text-[#f5b700] flex items-center justify-center pl-1">
                 {isSelected ? (
@@ -137,14 +137,14 @@ export default function MatchBannerCard({
               </div>
 
               {/* Big Map Name */}
-              <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+              <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] truncate">
                 {(m.map || 'UNKNOWN MAP').toUpperCase()}
               </h3>
             </div>
           </div>
 
           {/* Right: Top Player Stats + Score + Differential */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-2 sm:gap-6 shrink-0">
             
             {/* Top Squad Performer Badge (Hidden on very narrow mobile screens) */}
             {topPlayer && (
@@ -166,7 +166,7 @@ export default function MatchBannerCard({
 
             {/* Scoreus : Scorethem */}
             <div className="text-right">
-              <div className="font-mono-num text-xl sm:text-2xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+              <div className="font-mono-num text-lg sm:text-2xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                 <span>{m.score_us}</span>
                 <span className="text-[#7d90a6] mx-1">:</span>
                 <span>{m.score_them}</span>
@@ -177,9 +177,9 @@ export default function MatchBannerCard({
             </div>
 
             {/* Score Differential Banner Accent (+73 / -33) */}
-            <div className="min-w-[55px] sm:min-w-[70px] text-right">
+            <div className="min-w-[42px] sm:min-w-[70px] text-right">
               <span
-                className={`font-display text-2xl sm:text-3xl font-extrabold tracking-tight ${
+                className={`font-display text-xl sm:text-3xl font-extrabold tracking-tight ${
                   isWin ? 'text-[#10b981]' : 'text-[#ff334b]'
                 }`}
               >

@@ -2,7 +2,6 @@ import React from 'react';
 import Sparkline from './Sparkline';
 import DivergenceBar from './DivergenceBar';
 import { getPlayerMapBreakdown, getPlayerMapHighlights } from '../../engine/playerAnalytics';
-import { THEME_CLASSES } from '../../config/theme';
 
 export default function PlayerCardsGrid({ players = [], matches = [] }) {
   if (!players.length) {
