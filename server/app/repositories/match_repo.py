@@ -137,16 +137,17 @@ async def save_match(match: MatchCreate, renames: Optional[Dict[str, str]] = Non
     return await get_match_by_id(match_id)
 
 async def update_match_metadata(match_id: str, update: MatchUpdate) -> Optional[Dict[str, Any]]:
-    """Update match metadata (opponent, tier, game_type) in one statement."""
+    """Update match metadata (opponent, tier, mode, game_type) in one statement."""
     await db.execute(
         """
         UPDATE matches
         SET opponent = COALESCE(?, opponent),
             tier = COALESCE(?, tier),
+            mode = COALESCE(?, mode),
             game_type = COALESCE(?, game_type)
         WHERE id = ?
         """,
-        (update.opponent, update.tier, update.game_type, match_id)
+        (update.opponent, update.tier, update.mode, update.game_type, match_id)
     )
     return await get_match_by_id(match_id)
 

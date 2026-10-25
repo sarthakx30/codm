@@ -18,7 +18,7 @@ def get_gemini_api_key() -> str:
     return os.environ.get("GEMINI_API_KEY", "").strip()
 
 PORT = int(os.environ.get("PORT", 8000))
-APP_VERSION = "1.4.1"
+APP_VERSION = "1.4.2"
 MAX_UPLOAD_BYTES = 15_000_000
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
 GEMINI_FALLBACK = os.environ.get("GEMINI_FALLBACK", "gemini-3-flash")

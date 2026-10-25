@@ -57,7 +57,11 @@ export default function App() {
 
   const handleOpenScrimModal = (matchesList) => {
     if (!matchesList || matchesList.length === 0) return;
-    setScrimMatches(matchesList);
+    const limited = matchesList.length > 5 ? matchesList.slice(0, 5) : matchesList;
+    if (matchesList.length > 5) {
+      showToast('Select up to 5 maps for a scrim card.');
+    }
+    setScrimMatches(limited);
     setIsScrimModalOpen(true);
   };
 
@@ -175,6 +179,7 @@ export default function App() {
             loading={loading}
             serverError={serverError}
             onOpenAliasModal={() => setIsAliasModalOpen(true)}
+            showScope={activeTab !== 'add'}
           />
 
           {/* OVERVIEW TAB */}
@@ -200,10 +205,12 @@ export default function App() {
           {activeTab === 'matches' && (
             <section className="animate-fadeIn">
               <MatchList
+                key={filter}
                 matches={filteredMatches}
                 onUpdateMatch={handleUpdateMatch}
                 onDeleteMatch={handleDeleteMatch}
                 onOpenScrimModal={handleOpenScrimModal}
+                showToast={showToast}
               />
             </section>
           )}

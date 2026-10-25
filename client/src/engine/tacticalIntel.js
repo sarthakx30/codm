@@ -2,6 +2,8 @@
  * Tactical Intelligence & Record Engine
  */
 
+import { getModeId } from '../config/matchOptions.js';
+
 export function calculateTacticalIntel(matches = []) {
   if (!matches || !matches.length) {
     return {
@@ -43,11 +45,11 @@ export function calculateTacticalIntel(matches = []) {
 
     // Clutch detection
     const diff = Math.abs((m.score_us || 0) - (m.score_them || 0));
-    const mode = String(m.mode || '').toLowerCase();
+    const modeId = getModeId(m.mode);
     let isClutch = false;
 
-    if (mode.includes('hardpoint') && diff <= 30) isClutch = true;
-    else if ((mode.includes('search') || mode.includes('control')) && diff <= 1) isClutch = true;
+    if (modeId === 'hardpoint' && diff <= 30) isClutch = true;
+    else if ((modeId === 'snd' || modeId === 'control') && diff <= 1) isClutch = true;
     else if (diff <= 15) isClutch = true;
 
     if (isClutch) {

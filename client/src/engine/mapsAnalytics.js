@@ -4,6 +4,7 @@
  * tier-normalized performance margins, and starting 5 squad recommendations.
  */
 import { PALETTE } from '../config/theme.js';
+import { getModeId, normalizeMode } from '../config/matchOptions.js';
 import { calculatePlayerStats, parseTier } from './playerAnalytics.js';
 import {
   getTierDifficulty,
@@ -17,13 +18,15 @@ export function calculateMapsIntel(matches = []) {
   const mapGroups = new Map();
 
   matches.forEach(m => {
-    const mode = (m.mode || 'UNKNOWN').trim().toUpperCase();
+    const mode = normalizeMode(m.mode) || 'UNKNOWN';
+    const modeId = getModeId(mode);
     const mapName = (m.map || 'UNKNOWN').trim().toUpperCase();
     const key = `${mode}:::${mapName}`;
 
     if (!mapGroups.has(key)) {
       mapGroups.set(key, {
         mode,
+        modeId,
         map: mapName,
         matches: [],
         wins: 0,
@@ -115,8 +118,8 @@ export function calculateMapsIntel(matches = []) {
       });
     });
 
-    const isHP = group.mode.includes('HARDPOINT');
-    const isSnD = group.mode.includes('SEARCH') || group.mode.includes('S&D');
+    const isHP = group.modeId === 'hardpoint';
+    const isSnD = group.modeId === 'snd';
 
     // Rank players for this map using robust, mode-aware Map Performance Index (MPI)
     const rankedPlayers = playerMapStats.map(p => {
@@ -287,6 +290,7 @@ export function calculateMapsIntel(matches = []) {
 
     results.push({
       mode: group.mode,
+      modeId: group.modeId,
       map: group.map,
       totalGames,
       wins: group.wins,

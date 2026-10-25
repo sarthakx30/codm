@@ -1,6 +1,9 @@
 """Pydantic schemas for request and response validation."""
 from typing import Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from .match_options import normalize_game_type, normalize_mode, normalize_tier
+
 
 class PlayerSchema(BaseModel):
     name: str
@@ -25,6 +28,21 @@ class MatchBase(BaseModel):
     tier: str = Field(default="", pattern=r"^(|[Tt][123][HhMmLl])$")
     game_type: str = ""
 
+    @field_validator("tier")
+    @classmethod
+    def normalize_tier_value(cls, value: str) -> str:
+        return normalize_tier(value) or ""
+
+    @field_validator("mode")
+    @classmethod
+    def normalize_mode_value(cls, value: str) -> str:
+        return normalize_mode(value)
+
+    @field_validator("game_type")
+    @classmethod
+    def normalize_game_type_value(cls, value: str) -> str:
+        return normalize_game_type(value)
+
 class MatchCreate(MatchBase):
     id: Optional[str] = None
     added_at: Optional[str] = None
@@ -34,7 +52,23 @@ class MatchCreate(MatchBase):
 class MatchUpdate(BaseModel):
     opponent: Optional[str] = None
     tier: Optional[str] = Field(default=None, pattern=r"^(|[Tt][123][HhMmLl])$")
+    mode: Optional[str] = None
     game_type: Optional[str] = None
+
+    @field_validator("tier")
+    @classmethod
+    def normalize_tier_value(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_tier(value)
+
+    @field_validator("mode")
+    @classmethod
+    def normalize_mode_value(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_mode(value) if value is not None else None
+
+    @field_validator("game_type")
+    @classmethod
+    def normalize_game_type_value(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_game_type(value) if value is not None else None
 
 class MatchOut(MatchBase):
     id: str

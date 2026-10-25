@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import MatchBannerCard from './MatchBannerCard';
 import { Sparkles } from 'lucide-react';
 import { THEME_CLASSES } from '../../config/theme';
-import { parseTier } from '../../engine/playerAnalytics.js';
+import { normalizeGameType, normalizeMode, normalizeTier } from '../../config/matchOptions';
 
 export default function MatchList({
   matches = [],
   onUpdateMatch,
   onDeleteMatch,
-  onOpenScrimModal
+  onOpenScrimModal,
+  showToast
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [editState, setEditState] = useState({});
@@ -24,6 +25,10 @@ export default function MatchList({
   }
 
   const toggleSelectMatch = (id) => {
+    if (!selectedIds.has(id) && selectedIds.size >= 5) {
+      if (showToast) showToast('Select up to 5 maps for a scrim card.');
+      return;
+    }
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -46,8 +51,9 @@ export default function MatchList({
         ...prev,
         [m.id]: {
           opponent: m.opponent || '',
-          tier: m.tier || '',
-          game_type: m.game_type || ''
+          tier: normalizeTier(m.tier),
+          mode: normalizeMode(m.mode),
+          game_type: normalizeGameType(m.game_type)
         }
       }));
     }
@@ -65,15 +71,13 @@ export default function MatchList({
 
   const handleSave = (matchId) => {
     const edits = editState[matchId];
-    if (edits?.tier) {
-      const pt = parseTier(edits.tier);
-      if (pt.main && !pt.sub) {
-        alert('Subtier (High, Mid, or Low) is mandatory when specifying an opponent tier. Plain T1, T2, or T3 is not permitted.');
-        return;
-      }
-    }
     if (edits && onUpdateMatch) {
-      onUpdateMatch(matchId, edits);
+      onUpdateMatch(matchId, {
+        ...edits,
+        tier: normalizeTier(edits.tier),
+        mode: normalizeMode(edits.mode),
+        game_type: normalizeGameType(edits.game_type)
+      });
     }
   };
 
@@ -116,10 +120,10 @@ export default function MatchList({
                 ? `${THEME_CLASSES.badgeGold} font-bold shadow-[0_0_10px_rgba(245,183,0,0.3)]`
                 : `${THEME_CLASSES.btnGhost}`
             }`}
-            title="Select 2-5 maps from a series to compile and export a shareable Scrim Graphic Card"
+            title="Select 1-5 maps to compile a shareable Scrim Graphic Card"
           >
             <Sparkles size={13} className={isSelectMode ? 'text-secondary' : 'text-primary'} />
-            <span>{isSelectMode ? 'CANCEL SELECTION' : 'SELECT SCRIM SERIES'}</span>
+            <span>{isSelectMode ? 'CANCEL SELECTION' : 'SELECT MAPS FOR CARD'}</span>
           </button>
         </div>
       </div>
@@ -146,21 +150,24 @@ export default function MatchList({
 
       {/* Floating Scrim Generator Action Bar */}
       {isSelectMode && selectedIds.size > 0 && (
-        <div className="fixed bottom-16 lg:bottom-8 left-0 right-0 lg:left-64 xl:left-72 max-w-4xl mx-auto px-4 z-40 animate-slideUp">
-          <div className="bg-[#0c111a]/98 border-2 border-[#f5b700] backdrop-blur-md p-3.5 clip-corner shadow-[0_0_35px_rgba(245,183,0,0.4)] flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#f5b700] animate-pulse shadow-[0_0_8px_#f5b700]" />
-              <span className="font-display font-bold text-white text-base tracking-wide">
-                {selectedIds.size} {selectedIds.size === 1 ? 'MAP' : 'MAPS'} SELECTED FOR SCRIM SERIES
+        <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-8 left-0 right-0 lg:left-64 xl:left-72 max-w-4xl mx-auto px-3 sm:px-4 z-30 animate-slideUp">
+          <div className="bg-[#0c111a]/98 border-2 border-[#f5b700] backdrop-blur-md p-3 clip-corner shadow-[0_0_35px_rgba(245,183,0,0.4)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-[#f5b700] animate-pulse shadow-[0_0_8px_#f5b700]" />
+              <span className="font-display font-bold text-white text-sm sm:text-base tracking-wide">
+                {selectedIds.size} {selectedIds.size === 1 ? 'MAP' : 'MAPS'} SELECTED
+              </span>
+              <span className="hidden sm:inline text-[10px] font-mono-num text-[#7d90a6]">
+                MAX 5
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1.5 text-xs font-mono-num text-[#7d90a6] hover:text-white cursor-pointer"
+                className="px-3 py-2 text-xs font-mono-num text-[#7d90a6] hover:text-white cursor-pointer"
               >
-                Clear
+                CLEAR
               </button>
               <button
                 type="button"
@@ -168,7 +175,7 @@ export default function MatchList({
                   const selectedList = sortedMatches.filter(m => selectedIds.has(m.id));
                   if (onOpenScrimModal) onOpenScrimModal(selectedList);
                 }}
-                className={`px-4 py-2 ${THEME_CLASSES.btnPrimary} text-xs clip-corner-sm flex items-center gap-1.5 cursor-pointer`}
+                className={`flex-1 sm:flex-none px-4 py-2 ${THEME_CLASSES.btnPrimary} text-xs clip-corner-sm flex items-center justify-center gap-1.5 cursor-pointer`}
               >
                 <Sparkles size={14} />
                 <span>GENERATE SCRIM CARD</span>

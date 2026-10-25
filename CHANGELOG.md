@@ -4,6 +4,25 @@ All notable changes to the CODM Match Analytics Platform are documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-10-26
+
+### Unified Match Selectors
+- Added one source of truth for tier, mode, match category, and scrim series format options.
+- Added a shared tier picker, mode picker, category picker, and responsive filter pills.
+- Added editable game mode to the Add Match review form and the match history editor.
+- Added `mode` to the match update API. The API now accepts mode changes.
+- Made the map mode cards work as the mode filter. The separate mode pill row is removed.
+- Limited the tier filter to tiers that exist in the current data. The tier row scrolls on narrow screens.
+- Hid the match scope bar on the Add tab because it does not filter uploads.
+- Added canonical mode normalization. `HP`, `SND`, `S&D`, and `CONTROL RAID` now merge into the three supported modes.
+- A main tier now defaults to Mid when no subtier is selected. Bare tiers normalize to Mid.
+- Match category is always selected and always stored in lowercase.
+- Added a single batch control for opponent, tier, category, and sync. Removed the duplicate apply action.
+- Fixed the scrim card format selector. It no longer accepts dynamic values that do not exist in the list.
+- Limited scrim card selection to five maps. The selection action bar now sits above the mobile navigation bar.
+- Normalized tier, mode, and category values in API input and output.
+- Bumped the API and client version to `1.4.2`.
+
 ## [1.4.1] - 2026-10-26
 
 ### Mobile Navigation & Phone Layout

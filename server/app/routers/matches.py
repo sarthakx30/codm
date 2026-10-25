@@ -29,7 +29,7 @@ async def save_match(req: MatchSaveRequest):
 
 @router.patch("/{match_id}", response_model=MatchOut)
 async def update_match(match_id: str, update: MatchUpdate):
-    """Update match metadata (opponent, tier, game_type)."""
+    """Update match metadata (opponent, tier, mode, game_type)."""
     updated = await match_repo.update_match_metadata(match_id, update)
     if not updated:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")

@@ -112,6 +112,11 @@
   to { opacity: 1; transform: none; }
 }
 
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out both;
 }
@@ -124,10 +129,15 @@
   animation: navUp 0.25s ease-out both;
 }
 
+.animate-slideUp {
+  animation: slideUp 0.2s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fadeIn,
   .animate-slideRight,
-  .animate-nav-up {
+  .animate-nav-up,
+  .animate-slideUp {
     animation: none;
   }
 }

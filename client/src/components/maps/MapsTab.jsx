@@ -2,8 +2,30 @@ import React, { useState, useMemo } from 'react';
 import MapCard from './MapCard';
 import { calculateMapsIntel } from '../../engine/mapsAnalytics';
 import { parseTier } from '../../engine/playerAnalytics';
-import { THEME_CLASSES } from '../../config/theme';
-import { Flame, Target, Shield } from 'lucide-react';
+import { getModeId, MODES, TIER_FILTERS } from '../../config/matchOptions';
+import FilterPills from '../common/FilterPills';
+import { Flame, Target, Shield, X } from 'lucide-react';
+
+const MODE_META = {
+  hardpoint: {
+    icon: Flame,
+    color: '#f59e0b',
+    poolTitle: 'HARDPOINT POOL',
+    sectionTitle: 'HARDPOINT MAP ROTATION'
+  },
+  snd: {
+    icon: Target,
+    color: '#f5b700',
+    poolTitle: 'SEARCH & DESTROY',
+    sectionTitle: 'SEARCH & DESTROY MAP ROTATION'
+  },
+  control: {
+    icon: Shield,
+    color: '#10b981',
+    poolTitle: 'CONTROL POOL',
+    sectionTitle: 'CONTROL MAP ROTATION'
+  }
+};
 
 export default function MapsTab({ matches = [] }) {
   const [selectedMode, setSelectedMode] = useState('ALL');
@@ -11,7 +33,7 @@ export default function MapsTab({ matches = [] }) {
 
   // Tier filter counts
   const tierCounts = useMemo(() => {
-    const counts = { 'ALL': matches.length, 'T1': 0, 'T2': 0, 'T3': 0 };
+    const counts = { ALL: matches.length, T1: 0, T2: 0, T3: 0 };
     matches.forEach(m => {
       const pt = parseTier(m.tier);
       if (pt.main && counts[pt.main] !== undefined) {
@@ -21,69 +43,78 @@ export default function MapsTab({ matches = [] }) {
     return counts;
   }, [matches]);
 
-  const tierFilterPills = [
-    { id: 'ALL', label: 'ALL TIERS', count: tierCounts['ALL'] },
-    { id: 'T1', label: 'TIER 1', count: tierCounts['T1'] },
-    { id: 'T2', label: 'TIER 2', count: tierCounts['T2'] },
-    { id: 'T3', label: 'TIER 3', count: tierCounts['T3'] }
-  ];
+  // Hide empty tiers unless the user already selected one.
+  const tierOptions = useMemo(
+    () =>
+      TIER_FILTERS.map(option => ({
+        ...option,
+        count: option.value === 'ALL' ? matches.length : tierCounts[option.value]
+      })).filter(
+        option =>
+          option.value === 'ALL' ||
+          option.count > 0 ||
+          selectedTier === option.value
+      ),
+    [matches.length, tierCounts, selectedTier]
+  );
 
-  // Filter matches by selected tier first
   const tierFilteredMatches = useMemo(() => {
     if (selectedTier === 'ALL') return matches;
     return matches.filter(m => parseTier(m.tier).main === selectedTier);
   }, [matches, selectedTier]);
 
-  const mapsIntel = useMemo(() => calculateMapsIntel(tierFilteredMatches), [tierFilteredMatches]);
+  const mapsIntel = useMemo(
+    () => calculateMapsIntel(tierFilteredMatches),
+    [tierFilteredMatches]
+  );
 
-  // Mode categories for tier-filtered subset
+  // Win/loss totals for the three canonical modes.
   const modeStats = useMemo(() => {
-    const stats = {
-      'HARDPOINT': { wins: 0, losses: 0, total: 0 },
-      'SEARCH & DESTROY': { wins: 0, losses: 0, total: 0 },
-      'CONTROL': { wins: 0, losses: 0, total: 0 }
-    };
+    const stats = Object.fromEntries(
+      MODES.map(mode => [mode.id, { wins: 0, losses: 0, total: 0 }])
+    );
 
     tierFilteredMatches.forEach(m => {
-      const mode = (m.mode || '').toUpperCase();
-      let target = null;
-      if (mode.includes('HARDPOINT')) target = stats['HARDPOINT'];
-      else if (mode.includes('SEARCH') || mode.includes('S&D')) target = stats['SEARCH & DESTROY'];
-      else if (mode.includes('CONTROL')) target = stats['CONTROL'];
-
-      if (target) {
-        target.total++;
-        if (m.result === 'W') target.wins++;
-        else target.losses++;
-      }
+      const modeId = getModeId(m.mode);
+      if (!stats[modeId]) return;
+      stats[modeId].total++;
+      if (m.result === 'W') stats[modeId].wins++;
+      else stats[modeId].losses++;
     });
 
     return stats;
   }, [tierFilteredMatches]);
 
-  // Group maps by mode
-  const hardpointMaps = useMemo(() => mapsIntel.filter(m => m.mode.includes('HARDPOINT')), [mapsIntel]);
-  const sndMaps = useMemo(() => mapsIntel.filter(m => m.mode.includes('SEARCH') || m.mode.includes('S&D')), [mapsIntel]);
-  const controlMaps = useMemo(() => mapsIntel.filter(m => m.mode.includes('CONTROL')), [mapsIntel]);
+  // Group map cards by canonical mode.
+  const mapsByMode = useMemo(() => {
+    const grouped = Object.fromEntries(MODES.map(mode => [mode.id, []]));
+    mapsIntel.forEach(map => {
+      const modeId = map.modeId || getModeId(map.mode);
+      if (grouped[modeId]) grouped[modeId].push(map);
+    });
+    return grouped;
+  }, [mapsIntel]);
 
-  const modeFilterPills = [
-    { id: 'ALL', label: 'ALL MODES', count: mapsIntel.length },
-    { id: 'HARDPOINT', label: 'HARDPOINT', count: hardpointMaps.length },
-    { id: 'SEARCH & DESTROY', label: 'S&D', count: sndMaps.length },
-    { id: 'CONTROL', label: 'CONTROL', count: controlMaps.length }
-  ];
+  const visibleMaps =
+    selectedMode === 'ALL' ? mapsIntel : mapsByMode[selectedMode] || [];
+
+  const modeCards = MODES.map(mode => ({
+    ...mode,
+    ...MODE_META[mode.id],
+    maps: mapsByMode[mode.id] || [],
+    stats: modeStats[mode.id]
+  }));
 
   return (
     <div className="space-y-6 mb-10 animate-fadeIn">
-      
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#223046] pb-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 flex items-center gap-2.5">
+        <div className="min-w-0">
+          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wider m-0 flex flex-wrap items-center gap-2.5">
             <span className="w-1.5 h-5 bg-primary inline-block shadow-[0_0_8px_rgba(245,183,0,0.6)]"></span>
             MAP POOLS & SQUAD INTEL
             <span className="text-xs font-mono-num font-normal text-[#7d90a6] bg-[#111723] px-2 py-0.5 rounded border border-[#223046]">
-              {mapsIntel.length} MAPS RECORDED
+              {visibleMaps.length} MAPS IN VIEW
             </span>
           </h2>
           <p className="text-xs font-mono-num text-[#7d90a6] m-0 mt-1">
@@ -91,202 +122,121 @@ export default function MapsTab({ matches = [] }) {
           </p>
         </div>
 
-        {/* Filter Controls: Tier Filter + Mode Filter */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Tier Filter Selector */}
-          <div className="flex items-center gap-1 bg-[#080c14] border border-[#223046] p-1 rounded-sm">
-            <span className="text-[10px] font-mono-num text-[#5a6b82] px-1 uppercase font-bold tracking-wider">
-              TIER:
-            </span>
-            {tierFilterPills.map(pill => {
-              const isActive = selectedTier === pill.id;
-              return (
-                <button
-                  key={pill.id}
-                  onClick={() => setSelectedTier(pill.id)}
-                  className={`px-2.5 py-1 text-xs font-display transition-all cursor-pointer rounded-xs flex items-center gap-1 ${
-                    isActive
-                      ? 'bg-[#f5b700] text-[#080c14] font-bold shadow-[0_0_8px_rgba(245,183,0,0.4)]'
-                      : 'text-[#7d90a6] hover:text-white'
-                  }`}
-                >
-                  <span>{pill.label}</span>
-                  <span className={`text-[10px] font-mono-num ${isActive ? 'text-[#080c14]/80' : 'text-[#5a6b82]'}`}>
-                    ({pill.count})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Mode Filter Selector */}
-          <div className="flex items-center gap-1 bg-[#080c14] border border-[#223046] p-1 rounded-sm">
-            <span className="text-[10px] font-mono-num text-[#5a6b82] px-1 uppercase font-bold tracking-wider">
-              MODE:
-            </span>
-            {modeFilterPills.map(pill => {
-              const isActive = selectedMode === pill.id;
-              return (
-                <button
-                  key={pill.id}
-                  onClick={() => setSelectedMode(pill.id)}
-                  className={`px-2.5 py-1 text-xs font-display transition-all cursor-pointer rounded-xs flex items-center gap-1.5 ${
-                    isActive
-                      ? THEME_CLASSES.btnPrimary
-                      : 'text-[#7d90a6] hover:text-white'
-                  }`}
-                >
-                  <span>{pill.label}</span>
-                  <span className={`text-[10px] font-mono-num ${isActive ? 'text-[#080c14]/80' : 'text-[#5a6b82]'}`}>
-                    ({pill.count})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        {/* Tier Filter + Clear Mode */}
+        <div className="flex flex-col gap-2 w-full lg:w-auto">
+          <FilterPills
+            label="TIER"
+            options={tierOptions}
+            value={selectedTier}
+            onChange={setSelectedTier}
+            ariaLabel="Filter map pools by opponent tier"
+            className="w-full"
+          />
+          {selectedMode !== 'ALL' && (
+            <button
+              type="button"
+              onClick={() => setSelectedMode('ALL')}
+              className="self-start inline-flex items-center gap-1 text-[10px] font-display tracking-wider text-[#f5b700] hover:text-[#ffd700] cursor-pointer"
+            >
+              <X size={12} />
+              SHOW ALL MODES
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Mode Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Hardpoint Summary */}
-        <div className="bg-[#111723] border border-[#223046] p-3.5 clip-corner-sm flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#f59e0b]/10 border border-[#f59e0b]/30 flex items-center justify-center text-[#f59e0b]">
-              <Flame size={16} />
-            </div>
-            <div>
-              <span className="font-display font-bold text-white text-sm block tracking-wide">
-                HARDPOINT POOL
-              </span>
-              <span className="text-[11px] font-mono-num text-[#7d90a6]">
-                {hardpointMaps.length} Active Maps
-              </span>
-            </div>
-          </div>
-          <div className="text-right font-mono-num text-xs">
-            <span className="text-[#f59e0b] font-bold text-base block">
-              {modeStats['HARDPOINT'].total > 0
-                ? `${Math.round((modeStats['HARDPOINT'].wins / modeStats['HARDPOINT'].total) * 100)}%`
-                : '0%'}
-            </span>
-            <span className="text-[#7d90a6] text-[10px]">
-              {modeStats['HARDPOINT'].wins}W - {modeStats['HARDPOINT'].losses}L
-            </span>
-          </div>
+      {/* Mode Overview: cards also work as the mode filter */}
+      <div>
+        <div className="text-[10px] font-mono-num uppercase tracking-widest text-[#5a6b82] mb-2">
+          Mode Overview // Select a card to filter map pools
         </div>
-
-        {/* Search & Destroy Summary */}
-        <div className="bg-[#111723] border border-[#223046] p-3.5 clip-corner-sm flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#f5b700]/10 border border-[#f5b700]/30 flex items-center justify-center text-[#f5b700]">
-              <Target size={16} />
-            </div>
-            <div>
-              <span className="font-display font-bold text-white text-sm block tracking-wide">
-                SEARCH & DESTROY
-              </span>
-              <span className="text-[11px] font-mono-num text-[#7d90a6]">
-                {sndMaps.length} Active Maps
-              </span>
-            </div>
-          </div>
-          <div className="text-right font-mono-num text-xs">
-            <span className="text-[#ffd700] font-bold text-base block">
-              {modeStats['SEARCH & DESTROY'].total > 0
-                ? `${Math.round((modeStats['SEARCH & DESTROY'].wins / modeStats['SEARCH & DESTROY'].total) * 100)}%`
-                : '0%'}
-            </span>
-            <span className="text-[#7d90a6] text-[10px]">
-              {modeStats['SEARCH & DESTROY'].wins}W - {modeStats['SEARCH & DESTROY'].losses}L
-            </span>
-          </div>
-        </div>
-
-        {/* Control Summary */}
-        <div className="bg-[#111723] border border-[#223046] p-3.5 clip-corner-sm flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-center text-[#10b981]">
-              <Shield size={16} />
-            </div>
-            <div>
-              <span className="font-display font-bold text-white text-sm block tracking-wide">
-                CONTROL POOL
-              </span>
-              <span className="text-[11px] font-mono-num text-[#7d90a6]">
-                {controlMaps.length} Active Maps
-              </span>
-            </div>
-          </div>
-          <div className="text-right font-mono-num text-xs">
-            <span className="text-[#10b981] font-bold text-base block">
-              {modeStats['CONTROL'].total > 0
-                ? `${Math.round((modeStats['CONTROL'].wins / modeStats['CONTROL'].total) * 100)}%`
-                : '0%'}
-            </span>
-            <span className="text-[#7d90a6] text-[10px]">
-              {modeStats['CONTROL'].wins}W - {modeStats['CONTROL'].losses}L
-            </span>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {modeCards.map(card => {
+            const Icon = card.icon;
+            const isActive = selectedMode === card.id;
+            return (
+              <button
+                key={card.id}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setSelectedMode(isActive ? 'ALL' : card.id)}
+                title={isActive ? 'Show all modes' : `Filter to ${card.label}`}
+                className={`text-left bg-[#111723] border p-3.5 clip-corner-sm flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                  isActive
+                    ? 'border-[#f5b700] shadow-[0_0_16px_rgba(245,183,0,0.2)]'
+                    : 'border-[#223046] hover:border-[#354b6d]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="w-8 h-8 rounded border flex items-center justify-center shrink-0"
+                    style={{
+                      backgroundColor: `${card.color}1a`,
+                      borderColor: `${card.color}4d`,
+                      color: card.color
+                    }}
+                  >
+                    <Icon size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-display font-bold text-white text-sm block tracking-wide truncate">
+                      {card.poolTitle}
+                    </span>
+                    <span className="text-[11px] font-mono-num text-[#7d90a6]">
+                      {card.maps.length} Active Maps
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right font-mono-num text-xs shrink-0">
+                  <span
+                    className="font-bold text-base block"
+                    style={{ color: card.color }}
+                  >
+                    {card.stats.total > 0
+                      ? `${Math.round((card.stats.wins / card.stats.total) * 100)}%`
+                      : '0%'}
+                  </span>
+                  <span className="text-[#7d90a6] text-[10px]">
+                    {card.stats.wins}W - {card.stats.losses}L
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* MAP LISTINGS BY MODE */}
+      {/* Map listings by mode */}
       <div className="space-y-8">
-        
-        {/* HARDPOINT SECTION */}
-        {(selectedMode === 'ALL' || selectedMode === 'HARDPOINT') && hardpointMaps.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Flame size={18} className="text-[#f59e0b]" />
-              <h3 className="font-display font-extrabold text-lg text-white tracking-wider m-0">
-                HARDPOINT MAP ROTATION ({hardpointMaps.length})
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {hardpointMaps.map(m => (
-                <MapCard key={`${m.mode}-${m.map}`} mapData={m} />
-              ))}
-            </div>
-          </section>
-        )}
+        {modeCards.map(card => {
+          if (selectedMode !== 'ALL' && selectedMode !== card.id) return null;
+          if (!card.maps.length) return null;
+          const Icon = card.icon;
+          return (
+            <section key={card.id} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Icon size={18} style={{ color: card.color }} />
+                <h3 className="font-display font-extrabold text-lg text-white tracking-wider m-0">
+                  {card.sectionTitle} ({card.maps.length})
+                </h3>
+              </div>
+              <div className="space-y-3">
+                {card.maps.map(map => (
+                  <MapCard key={`${map.mode}-${map.map}`} mapData={map} />
+                ))}
+              </div>
+            </section>
+          );
+        })}
 
-        {/* SEARCH & DESTROY SECTION */}
-        {(selectedMode === 'ALL' || selectedMode === 'SEARCH & DESTROY') && sndMaps.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Target size={18} className="text-[#f5b700]" />
-              <h3 className="font-display font-extrabold text-lg text-white tracking-wider m-0">
-                SEARCH & DESTROY MAP ROTATION ({sndMaps.length})
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {sndMaps.map(m => (
-                <MapCard key={`${m.mode}-${m.map}`} mapData={m} />
-              ))}
-            </div>
-          </section>
+        {visibleMaps.length === 0 && (
+          <div className="bg-[#111723] border border-[#223046] p-6 text-center clip-corner-sm">
+            <p className="text-sm font-mono-num text-[#7d90a6]">
+              No maps match the selected tier and mode.
+            </p>
+          </div>
         )}
-
-        {/* CONTROL SECTION */}
-        {(selectedMode === 'ALL' || selectedMode === 'CONTROL') && controlMaps.length > 0 && (
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Shield size={18} className="text-[#10b981]" />
-              <h3 className="font-display font-extrabold text-lg text-white tracking-wider m-0">
-                CONTROL MAP ROTATION ({controlMaps.length})
-              </h3>
-            </div>
-            <div className="space-y-3">
-              {controlMaps.map(m => (
-                <MapCard key={`${m.mode}-${m.map}`} mapData={m} />
-              ))}
-            </div>
-          </section>
-        )}
-
       </div>
-
     </div>
   );
 }

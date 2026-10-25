@@ -43,7 +43,7 @@ def create_match(client, payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
 def test_root_reports_version(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json()["version"] == "1.4.1"
+    assert response.json()["version"] == "1.4.2"
 
 
 def test_health_returns_ok(client):
@@ -59,6 +59,8 @@ def test_create_match_generates_id(client):
     created = create_match(client)
     assert len(created["id"]) == 10
     assert created["opponent"] == "Enemy"
+    assert created["mode"] == "Hardpoint"
+    assert created["game_type"] == "scrim"
     assert len(created["us"]) == 2
     assert len(created["them"]) == 2
 
@@ -79,19 +81,36 @@ def test_save_is_upsert_without_player_duplicates(client):
     assert len(listed) == 1
 
 
+def test_blank_game_type_defaults_to_scrim(client):
+    payload = make_match()
+    payload["game_type"] = ""
+    created = create_match(client, payload)
+    assert created["game_type"] == "scrim"
+
+
 def test_patch_match_metadata(client):
     created = create_match(client)
 
     response = client.patch(
         f"/api/matches/{created['id']}",
-        json={"opponent": "New Enemy", "tier": "T1H", "game_type": "Tournament"}
+        json={
+            "opponent": "New Enemy",
+            "tier": "t1h",
+            "mode": "CONTROL RAID",
+            "game_type": "Tournament"
+        }
     )
     assert response.status_code == 200
     body = response.json()
     assert body["opponent"] == "New Enemy"
     assert body["tier"] == "T1H"
-    assert body["game_type"] == "Tournament"
-    assert body["mode"] == "Hardpoint"
+    assert body["game_type"] == "tournament"
+    assert body["mode"] == "Control"
+
+    # A bare main tier defaults to Mid instead of failing validation.
+    mid = client.patch(f"/api/matches/{created['id']}", json={"tier": "T2"})
+    assert mid.status_code == 200
+    assert mid.json()["tier"] == "T2M"
 
     missing = client.patch("/api/matches/does-not-exist", json={"tier": "T1H"})
     assert missing.status_code == 404

@@ -1,8 +1,19 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { api } from '../../api/client';
-import { parseTier } from '../../engine/playerAnalytics';
 import { calculateOpponents } from '../../engine/tierAnalytics';
+import {
+  GAME_TYPES,
+  gameTypeLabel,
+  normalizeGameType,
+  normalizeMode,
+  normalizeTier,
+  tierLabel
+} from '../../config/matchOptions';
 import { THEME_CLASSES } from '../../config/theme';
+import TierPicker from '../common/TierPicker';
+import TierSelect from '../common/TierSelect';
+import ModePicker from '../common/ModePicker';
+import GameTypePicker from '../common/GameTypePicker';
 import { UploadCloud, CheckCircle2, AlertTriangle, XCircle, ArrowRight, UserMinus, Users, Sparkles, Layers } from 'lucide-react';
 
 function shrinkImage(file) {
@@ -34,17 +45,9 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
   const priorOpponents = useMemo(() => calculateOpponents(matches), [matches]);
 
   const applySeriesDetailsToAll = (targetOpponent, targetTier, targetGameType) => {
-    const opp = targetOpponent !== undefined ? targetOpponent : seriesOpponent;
-    const tier = targetTier !== undefined ? targetTier : seriesTier;
-    const gt = targetGameType !== undefined ? targetGameType : seriesGameType;
-
-    if (tier) {
-      const pt = parseTier(tier);
-      if (pt.main && !pt.sub) {
-        alert('Subtier (High, Mid, or Low) is mandatory when specifying opponent tier. Plain T1, T2, or T3 is not permitted.');
-        return;
-      }
-    }
+    const opp = (targetOpponent !== undefined ? targetOpponent : seriesOpponent).trim();
+    const tier = normalizeTier(targetTier !== undefined ? targetTier : seriesTier);
+    const gt = normalizeGameType(targetGameType !== undefined ? targetGameType : seriesGameType);
 
     setQueue(prev => prev.map(q => {
       if (!q.match) return q;
@@ -52,48 +55,49 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
         ...q,
         match: {
           ...q.match,
-          opponent: opp,
-          tier: tier !== undefined ? tier : q.match.tier,
-          game_type: gt !== undefined ? gt : q.match.game_type
+          ...(opp ? { opponent: opp } : {}),
+          ...(tier ? { tier } : {}),
+          game_type: gt
         }
       };
     }));
 
+    setSeriesTier(tier);
+    setSeriesGameType(gt);
     if (showToast) {
-      showToast(`Applied ${opp || 'unnamed'} (${tier || 'No tier'}) to all queued matches.`);
+      const opponentPart = opp ? `${opp} · ` : '';
+      const tierPart = tier ? `${tierLabel(tier)} · ` : '';
+      showToast(`Applied ${opponentPart}${tierPart}${gameTypeLabel(gt)} to all queued matches.`);
     }
   };
 
   const handleSelectOpponentForMatch = (selectedName, forBatch = false) => {
     if (!selectedName) return;
     const pastOpp = priorOpponents.find(o => o.name.toLowerCase() === selectedName.toLowerCase());
-    const pastTier = pastOpp?.tier || '';
+    const pastTier = normalizeTier(pastOpp?.tier || '');
 
     if (forBatch) {
       setSeriesOpponent(selectedName);
-      if (pastTier) setSeriesTier(pastTier);
-      applySeriesDetailsToAll(selectedName, pastTier, seriesGameType);
-    } else {
-      if (!cur || !cur.match) return;
-      const updated = {
-        ...cur.match,
-        opponent: selectedName,
-        tier: pastTier || cur.match.tier
-      };
-      setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
-      if (showToast && pastTier) {
-        showToast(`Auto-populated tier ${pastTier} for ${selectedName}`);
-      }
+      setSeriesTier(pastTier);
+      return;
+    }
+
+    if (!cur || !cur.match) return;
+    const updated = {
+      ...cur.match,
+      opponent: selectedName,
+      tier: pastTier || cur.match.tier
+    };
+    setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
+    if (showToast && pastTier) {
+      showToast(`Auto-populated tier ${pastTier} for ${selectedName}`);
     }
   };
 
-  const handleApplyCurrentToBatch = () => {
-    if (!cur || !cur.match) return;
-    const { opponent, tier, game_type } = cur.match;
-    setSeriesOpponent(opponent || '');
-    setSeriesTier(tier || '');
-    if (game_type) setSeriesGameType(game_type);
-    applySeriesDetailsToAll(opponent, tier, game_type);
+  const updateCurrentMatch = (updates) => {
+    setQueue(prev => prev.map((q, i) => (
+      i === queueIndex ? { ...q, match: { ...q.match, ...updates } } : q
+    )));
   };
 
   const handleFiles = async (files) => {
@@ -123,9 +127,11 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
         const response = await api.parseScreenshot(shrunkBlob);
         const matchData = response.match;
         if (matchData) {
+          matchData.mode = normalizeMode(matchData.mode) || matchData.mode || '';
+          matchData.tier = normalizeTier(matchData.tier);
+          matchData.game_type = normalizeGameType(seriesGameType);
           if (seriesOpponent) matchData.opponent = seriesOpponent;
-          if (seriesTier) matchData.tier = seriesTier;
-          if (seriesGameType) matchData.game_type = seriesGameType;
+          if (seriesTier) matchData.tier = normalizeTier(seriesTier);
           if (matchData.us) {
             matchData.us = matchData.us.map(p => ({
               ...p,
@@ -150,6 +156,8 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
   };
 
   const cur = queue[queueIndex];
+  const curMode = cur?.match ? normalizeMode(cur.match.mode) : '';
+  const canSaveCurrent = Boolean(cur?.match && curMode);
 
   const advanceQueue = (newlySavedMatch, updatedQueue) => {
     let nextSavedList = lastSavedBatch;
@@ -191,13 +199,19 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
 
   const handleSaveCurrent = async () => {
     if (!cur || !cur.match) return;
-    if (cur.match.tier) {
-      const pt = parseTier(cur.match.tier);
-      if (pt.main && !pt.sub) {
-        alert('Subtier (High, Mid, or Low) is mandatory when specifying opponent tier. Standalone T1, T2, or T3 is not permitted.');
-        return;
-      }
+    const mode = normalizeMode(cur.match.mode);
+    if (!mode) {
+      if (showToast) showToast('Pick a game mode before saving.');
+      return;
     }
+
+    const matchToSave = {
+      ...cur.match,
+      tier: normalizeTier(cur.match.tier),
+      mode,
+      game_type: normalizeGameType(cur.match.game_type)
+    };
+
     try {
       const renames = {};
       cur.match.us.forEach(p => {
@@ -206,15 +220,15 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
         }
       });
 
-      const savedMatch = await api.saveMatch(cur.match, renames);
+      const savedMatch = await api.saveMatch(matchToSave, renames);
       showToast('Match saved.');
       if (onMatchSaved) onMatchSaved();
 
       const updatedQueue = queue.map((q, i) => i === queueIndex ? { ...q, status: 'saved' } : q);
       setQueue(updatedQueue);
-      advanceQueue(savedMatch || cur.match, updatedQueue);
+      advanceQueue(savedMatch || matchToSave, updatedQueue);
     } catch (err) {
-      alert(`Save failed: ${err.message}`);
+      if (showToast) showToast(`Save failed: ${err.message}`);
     }
   };
 
@@ -369,15 +383,21 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
           <div className="mt-2.5 pt-2.5 border-t border-[#223046]/70 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs font-mono-num">
             <div className="flex items-center gap-2">
               <Layers size={13} className="text-[#f5b700]" />
-              <span className="font-display font-bold text-xs text-[#f5b700] tracking-wider">
-                SERIES INTEL (APPLY TO ENTIRE BATCH)
-              </span>
+              <div>
+                <span className="font-display font-bold text-xs text-[#f5b700] tracking-wider block">
+                  SERIES INTEL
+                </span>
+                <span className="text-[10px] text-[#5a6b82]">
+                  Set the batch defaults, then press Sync.
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <select
                 value={priorOpponents.some(o => o.name.toLowerCase() === seriesOpponent.toLowerCase()) ? seriesOpponent : ''}
                 onChange={e => handleSelectOpponentForMatch(e.target.value, true)}
-                className="bg-[#080c14] border border-[#354b6d] text-white px-2 py-1 text-xs rounded-xs"
+                aria-label="Past opponent"
+                className="bg-[#080c14] border border-[#354b6d] text-white px-2 py-1 text-xs rounded-xs min-w-0"
               >
                 <option value="">-- Past Team ({priorOpponents.length}) --</option>
                 {priorOpponents.map(opp => (
@@ -393,16 +413,28 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                   const val = e.target.value;
                   setSeriesOpponent(val);
                   const found = priorOpponents.find(o => o.name.toLowerCase() === val.toLowerCase());
-                  if (found?.tier) setSeriesTier(found.tier);
+                  if (found) setSeriesTier(normalizeTier(found.tier));
                 }}
                 placeholder="Or custom opponent"
-                className="bg-[#080c14] border border-[#354b6d] text-white px-2 py-1 text-xs rounded-xs w-36"
+                aria-label="Custom opponent"
+                className="bg-[#080c14] border border-[#354b6d] text-white px-2 py-1 text-xs rounded-xs w-36 min-w-0"
               />
+              <TierSelect value={seriesTier} onChange={setSeriesTier} />
+              <select
+                value={normalizeGameType(seriesGameType)}
+                onChange={e => setSeriesGameType(e.target.value)}
+                aria-label="Match category"
+                className="bg-[#080c14] border border-[#354b6d] text-white px-2 py-1 text-xs rounded-xs"
+              >
+                {GAME_TYPES.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={() => applySeriesDetailsToAll()}
                 className="px-2.5 py-1 bg-[#f5b700] hover:bg-[#ffd700] text-[#0a0d14] font-display font-extrabold text-[11px] clip-corner-sm cursor-pointer shadow-[0_0_8px_rgba(245,183,0,0.25)] flex items-center gap-1"
-                title="Apply series opponent and tier to all matches in this batch"
+                title="Apply series opponent, tier, and category to all queued matches"
               >
                 <CheckCircle2 size={11} />
                 <span>SYNC ALL ({queue.length})</span>
@@ -505,7 +537,7 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                 </div>
 
                 <div className="text-xs font-mono-num text-[#7d90a6]">
-                  <span>{cur.match.map} - {cur.match.mode}</span>
+                  <span>{cur.match.map} - {normalizeMode(cur.match.mode) || cur.match.mode || 'MODE MISSING'}</span>
                   <span className="ml-2 text-white">[{cur.match.played_at_raw}]</span>
                 </div>
               </div>
@@ -608,27 +640,15 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                 </div>
               </div>
 
-              {/* Match Metadata (Opponent, Tier, Game Type) */}
-              <div className="bg-[#161e2e] border border-[#223046] p-3 clip-corner-sm space-y-2.5 text-xs font-mono-num">
+              {/* Match Metadata (Opponent, Tier, Mode, Category) */}
+              <div className="bg-[#161e2e] border border-[#223046] p-3 clip-corner-sm space-y-3 text-xs font-mono-num">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[#7d90a6]">Opponent Team</label>
-                    {queue.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={handleApplyCurrentToBatch}
-                        className="text-[10px] text-[#f5b700] hover:text-[#ffd700] flex items-center gap-1 font-display uppercase tracking-wider cursor-pointer"
-                        title="Copy this opponent and tier to all matches in the batch"
-                      >
-                        <Layers size={11} />
-                        <span>APPLY TO ALL IN BATCH ({queue.length})</span>
-                      </button>
-                    )}
-                  </div>
+                  <label className="block text-[#7d90a6] mb-1">Opponent Team</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select
                       value={priorOpponents.some(o => o.name.toLowerCase() === (cur.match.opponent || '').toLowerCase()) ? cur.match.opponent : ''}
                       onChange={e => handleSelectOpponentForMatch(e.target.value, false)}
+                      aria-label="Past opponent"
                       className="bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm focus:border-[#f5b700]"
                     >
                       <option value="">-- Pick past opponent ({priorOpponents.length}) --</option>
@@ -644,115 +664,49 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                       onChange={e => {
                         const val = e.target.value;
                         const matchOpp = priorOpponents.find(o => o.name.toLowerCase() === val.toLowerCase());
-                        const updated = {
-                          ...cur.match,
+                        updateCurrentMatch({
                           opponent: val,
-                          tier: matchOpp?.tier ? matchOpp.tier : cur.match.tier
-                        };
-                        setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
+                          tier: matchOpp?.tier ? normalizeTier(matchOpp.tier) : cur.match.tier
+                        });
                       }}
                       placeholder="e.g. Elevate / Tribe"
+                      aria-label="Opponent team"
                       className="bg-[#080c14] border border-[#354b6d] text-white px-2.5 py-1.5 rounded-sm focus:border-[#f5b700]"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex justify-between items-center text-[#7d90a6] mb-1">
-                    <span>Opponent Tier</span>
-                    <div className="flex items-center gap-1.5">
-                      {parseTier(cur.match.tier).main && !parseTier(cur.match.tier).sub && (
-                        <span className="text-[#ff334b] text-[10px] font-bold animate-pulse">
-                          SUBTIER REQUIRED
-                        </span>
-                      )}
-                      <span className="text-[#ffb800] font-bold">Selected: {cur.match.tier || 'None'}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[#7d90a6]">Opponent Tier</span>
+                      <span className="text-[#f5b700] font-bold">{tierLabel(cur.match.tier)}</span>
                     </div>
+                    <TierPicker
+                      value={cur.match.tier}
+                      onChange={val => updateCurrentMatch({ tier: val })}
+                    />
                   </div>
-                  {/* Main Tier */}
-                  <div className="flex gap-1 mb-1">
-                    {['T1', 'T2', 'T3', ''].map(val => {
-                      const pt = parseTier(cur.match.tier);
-                      const isActive = pt.main === val || (!pt.main && !val);
-                      return (
-                        <button
-                          type="button"
-                          key={val}
-                          onClick={() => {
-                            const newTier = val ? `${val}${pt.sub || ''}` : '';
-                            const updated = { ...cur.match, tier: newTier };
-                            setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
-                          }}
-                          className={`flex-1 py-1 font-display text-xs border ${
-                            isActive
-                              ? 'border-[#ffb800] text-[#ffb800] bg-[#ffb800]/15'
-                              : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
-                          }`}
-                        >
-                          {val ? val.replace('T', 'Tier ') : 'None'}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Subtier (Mandatory when main tier is selected) */}
-                  {parseTier(cur.match.tier).main && (
-                    <div>
-                      <div className="flex items-center justify-between text-[10px] font-mono-num text-[#8292a8] mb-1">
-                        <span>Subtier (Mandatory):</span>
-                        {!parseTier(cur.match.tier).sub && (
-                          <span className="text-[#ff334b] font-bold animate-pulse">Pick H, M, or L *</span>
-                        )}
-                      </div>
-                      <div className="flex gap-1">
-                        {['H', 'M', 'L'].map(sub => {
-                          const pt = parseTier(cur.match.tier);
-                          const isActive = pt.sub === sub;
-                          return (
-                            <button
-                              type="button"
-                              key={sub}
-                              onClick={() => {
-                                const updated = { ...cur.match, tier: `${pt.main}${sub}` };
-                                setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
-                              }}
-                              className={`flex-1 py-1 text-xs font-display border transition-all ${
-                                isActive
-                                  ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/25 font-bold shadow-[0_0_8px_rgba(245,183,0,0.3)]'
-                                  : 'border-[#223046] text-[#7d90a6] bg-[#080c14] hover:border-[#f5b700]/50'
-                              }`}
-                            >
-                              {sub === 'H' ? 'High (H)' : sub === 'M' ? 'Mid (M)' : 'Low (L)'}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-[#7d90a6] mb-1">Match Category</label>
-                  <div className="flex gap-1">
-                    {['scrim', 'tournament'].map(gt => {
-                      const isActive = cur.match.game_type === gt;
-                      return (
-                        <button
-                          type="button"
-                          key={gt}
-                          onClick={() => {
-                            const updated = { ...cur.match, game_type: isActive ? '' : gt };
-                            setQueue(prev => prev.map((q, i) => i === queueIndex ? { ...q, match: updated } : q));
-                          }}
-                          className={`flex-1 py-1 font-display text-xs border capitalize ${
-                            isActive
-                              ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15'
-                              : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
-                          }`}
-                        >
-                          {gt}
-                        </button>
-                      );
-                    })}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[#7d90a6]">Game Mode</span>
+                      {!curMode && (
+                        <span className="text-[#ff334b] text-[10px] font-bold">REQUIRED</span>
+                      )}
+                    </div>
+                    <ModePicker
+                      value={cur.match.mode}
+                      onChange={val => updateCurrentMatch({ mode: val })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#7d90a6] mb-1">Match Category</label>
+                    <GameTypePicker
+                      value={cur.match.game_type}
+                      onChange={val => updateCurrentMatch({ game_type: val })}
+                    />
                   </div>
                 </div>
               </div>
@@ -762,12 +716,13 @@ export default function BatchUploadModal({ matches = [], onMatchSaved, showToast
                 <button
                   type="button"
                   onClick={handleSaveCurrent}
-                  disabled={Boolean(parseTier(cur.match.tier).main && !parseTier(cur.match.tier).sub)}
+                  disabled={!canSaveCurrent}
+                  title={canSaveCurrent ? 'Save this match' : 'Select a game mode first'}
                   className={`flex-1 py-2 ${
-                    parseTier(cur.match.tier).main && !parseTier(cur.match.tier).sub
+                    !canSaveCurrent
                       ? 'opacity-50 cursor-not-allowed bg-[#223046] text-[#7d90a6]'
-                      : THEME_CLASSES.btnPrimary
-                  } text-sm clip-corner-sm cursor-pointer`}
+                      : `${THEME_CLASSES.btnPrimary} cursor-pointer`
+                  } text-sm clip-corner-sm`}
                 >
                   {cur.duplicate ? 'SAVE ANYWAY' : 'SAVE MATCH'}
                 </button>

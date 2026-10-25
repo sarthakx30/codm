@@ -2,6 +2,8 @@
  * Honors Engine: 14-Day Rolling Window Calculations
  */
 
+import { getModeId } from '../config/matchOptions.js';
+
 export function calculateHonors(matches = []) {
   if (!matches || !matches.length) return null;
 
@@ -25,7 +27,7 @@ export function calculateHonors(matches = []) {
   const playersMap = {};
 
   recentMatches.forEach(m => {
-    const isHp = String(m.mode || '').toLowerCase().includes('hardpoint');
+    const isHp = getModeId(m.mode) === 'hardpoint';
     const won = m.result === 'W';
 
     (m.us || []).forEach(p => {

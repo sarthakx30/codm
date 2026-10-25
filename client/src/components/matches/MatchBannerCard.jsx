@@ -1,7 +1,10 @@
 import React from 'react';
 import MapBannerBackdrop from '../common/MapBannerBackdrop';
 import ScoreboardTable from './ScoreboardTable';
-import { parseTier } from '../../engine/playerAnalytics';
+import TierPicker from '../common/TierPicker';
+import ModePicker from '../common/ModePicker';
+import GameTypePicker from '../common/GameTypePicker';
+import { normalizeGameType, normalizeMode, normalizeTier, tierLabel } from '../../config/matchOptions';
 import { THEME_CLASSES } from '../../config/theme';
 import {
   Trophy,
@@ -34,10 +37,11 @@ export default function MatchBannerCard({
 
   const currentEdit = editState || {
     opponent: m.opponent || '',
-    tier: m.tier || '',
-    game_type: m.game_type || ''
+    tier: normalizeTier(m.tier),
+    mode: normalizeMode(m.mode),
+    game_type: normalizeGameType(m.game_type)
   };
-  const pt = parseTier(currentEdit.tier);
+  const editMode = normalizeMode(currentEdit.mode);
 
   // Top performer or MVP on our team
   const sortedPlayers = (m.us || []).slice().sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -117,7 +121,7 @@ export default function MatchBannerCard({
                   {isWin ? 'WIN' : 'LOSS'}
                 </span>
                 <span className="text-[#a0aec0] uppercase tracking-wider font-semibold">
-                  {m.mode || 'HARDPOINT'}
+                  {normalizeMode(m.mode) || m.mode || 'UNKNOWN MODE'}
                 </span>
                 {formattedDate && (
                   <span className="text-[#64748b]">
@@ -227,7 +231,7 @@ export default function MatchBannerCard({
               EDIT MATCH METADATA
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono-num mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono-num mb-3">
               {/* Opponent Input */}
               <div>
                 <label className="block text-[#7d90a6] mb-1">Opponent Clan / Team</label>
@@ -244,93 +248,35 @@ export default function MatchBannerCard({
               <div>
                 <div className="flex justify-between items-center text-[#7d90a6] mb-1">
                   <span>Opponent Tier</span>
-                  <div className="flex items-center gap-1.5">
-                    {pt.main && !pt.sub && (
-                      <span className="text-[#ff334b] text-[10px] font-bold animate-pulse">
-                        SUBTIER REQUIRED
-                      </span>
-                    )}
-                    <span className="text-[#f5b700] font-bold">{currentEdit.tier || 'None'}</span>
-                  </div>
+                  <span className="text-[#f5b700] font-bold">{tierLabel(currentEdit.tier)}</span>
                 </div>
-                <div className="flex gap-1 mb-1">
-                  {['T1', 'T2', 'T3', ''].map(val => {
-                    const isActive = pt.main === val || (!pt.main && !val);
-                    return (
-                      <button
-                        type="button"
-                        key={val}
-                        onClick={() => {
-                          const newTier = val ? `${val}${pt.sub || ''}` : '';
-                          onFieldChange(m.id, 'tier', newTier);
-                        }}
-                        className={`flex-1 py-1 font-display text-xs border ${
-                          isActive
-                            ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15 font-bold'
-                            : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
-                        }`}
-                      >
-                        {val ? val.replace('T', 'Tier ') : 'None'}
-                      </button>
-                    );
-                  })}
+                <TierPicker
+                  value={currentEdit.tier}
+                  onChange={val => onFieldChange(m.id, 'tier', val)}
+                />
+              </div>
+
+              {/* Mode Selector */}
+              <div>
+                <div className="flex justify-between items-center text-[#7d90a6] mb-1">
+                  <span>Game Mode</span>
+                  {!editMode && (
+                    <span className="text-[#ff334b] text-[10px] font-bold">REQUIRED</span>
+                  )}
                 </div>
-                {/* Subtier selector sorted High -> Mid -> Low (Mandatory when tier is selected) */}
-                {pt.main && (
-                  <div>
-                    <div className="flex items-center justify-between text-[10px] font-mono-num text-[#8292a8] mb-1">
-                      <span>Subtier (Mandatory):</span>
-                      {!pt.sub && (
-                        <span className="text-[#ff334b] font-bold animate-pulse">Pick H, M, or L *</span>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      {['H', 'M', 'L'].map(sub => {
-                        const isActive = pt.sub === sub;
-                        return (
-                          <button
-                            type="button"
-                            key={sub}
-                            onClick={() => onFieldChange(m.id, 'tier', `${pt.main}${sub}`)}
-                            className={`flex-1 py-1 text-xs font-display border transition-all ${
-                              isActive
-                                ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/25 font-bold shadow-[0_0_8px_rgba(245,183,0,0.3)]'
-                                : 'border-[#223046] text-[#7d90a6] bg-[#080c14] hover:border-[#f5b700]/50'
-                            }`}
-                          >
-                            {sub === 'H' ? 'High (H)' : sub === 'M' ? 'Mid (M)' : 'Low (L)'}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                <ModePicker
+                  value={currentEdit.mode}
+                  onChange={val => onFieldChange(m.id, 'mode', val)}
+                />
               </div>
 
               {/* Category */}
               <div>
                 <label className="block text-[#7d90a6] mb-1">Match Category</label>
-                <div className="flex gap-1">
-                  {['scrim', 'tournament'].map(gt => {
-                    const isActive = currentEdit.game_type === gt;
-                    return (
-                      <button
-                        type="button"
-                        key={gt}
-                        onClick={() =>
-                          onFieldChange(m.id, 'game_type', isActive ? '' : gt)
-                        }
-                        className={`flex-1 py-1 font-display text-xs border uppercase ${
-                          isActive
-                            ? 'border-[#f5b700] text-[#ffd700] bg-[#f5b700]/15 font-bold'
-                            : 'border-[#223046] text-[#7d90a6] bg-[#080c14]'
-                        }`}
-                      >
-                        {gt}
-                      </button>
-                    );
-                  })}
-                </div>
+                <GameTypePicker
+                  value={currentEdit.game_type}
+                  onChange={val => onFieldChange(m.id, 'game_type', val)}
+                />
               </div>
             </div>
 
@@ -338,22 +284,14 @@ export default function MatchBannerCard({
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#223046]">
               <button
                 type="button"
-                onClick={() => {
-                  if (currentEdit.tier) {
-                    const checkPt = parseTier(currentEdit.tier);
-                    if (checkPt.main && !checkPt.sub) {
-                      alert('Subtier (High, Mid, or Low) is mandatory when specifying an opponent tier. Plain T1, T2, or T3 is not permitted.');
-                      return;
-                    }
-                  }
-                  onSave(m.id);
-                }}
-                disabled={Boolean(pt.main && !pt.sub)}
+                onClick={() => onSave(m.id)}
+                disabled={!editMode}
+                title={editMode ? 'Save match metadata' : 'Select a game mode first'}
                 className={`flex-1 sm:flex-initial px-4 py-1.5 ${
-                  pt.main && !pt.sub
+                  !editMode
                     ? 'opacity-50 cursor-not-allowed bg-[#223046] text-[#7d90a6]'
-                    : THEME_CLASSES.btnPrimary
-                } text-xs clip-corner-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
+                    : `${THEME_CLASSES.btnPrimary} cursor-pointer`
+                } text-xs clip-corner-sm flex items-center justify-center gap-1.5 transition-all`}
               >
                 <Save size={13} />
                 <span>SAVE DETAILS</span>

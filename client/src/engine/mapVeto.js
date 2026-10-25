@@ -2,6 +2,7 @@
  * Map Veto & Pick/Ban Strategy Matrix Engine
  */
 import { calculateMatchWeightedMargin } from './tierAnalytics.js';
+import { normalizeMode } from '../config/matchOptions.js';
 
 export function calculateMapVeto(matches = []) {
   if (!matches || !matches.length) return [];
@@ -10,11 +11,12 @@ export function calculateMapVeto(matches = []) {
 
   matches.forEach(m => {
     if (!m.mode && !m.map) return;
-    const key = `${m.map || 'Unknown'} - ${m.mode || 'Unknown'}`;
+    const mode = normalizeMode(m.mode) || 'Unknown';
+    const key = `${m.map || 'Unknown'} - ${mode}`;
     const node = mapModeMap[key] = mapModeMap[key] || {
       name: key,
       map: m.map || 'Unknown',
-      mode: m.mode || 'Unknown',
+      mode,
       played: 0,
       wins: 0,
       roundDiff: 0,

@@ -3,10 +3,12 @@
  */
 
 import { PALETTE } from '../config/theme.js';
+import { getModeId, normalizeTier } from '../config/matchOptions.js';
 
 export function parseTier(t = '') {
-  const m = String(t || '').toUpperCase().match(/^(T[123])([HML])?$/);
-  return m ? { main: m[1], sub: m[2] || '' } : { main: '', sub: '' };
+  const tier = normalizeTier(t);
+  if (!tier) return { main: '', sub: '' };
+  return { main: tier.slice(0, 2), sub: tier.slice(2) };
 }
 
 export function getPlayerRoleTag(p) {
@@ -24,12 +26,13 @@ export function calculatePlayerStats(matches = []) {
 
   matches.forEach(m => {
     const squadKills = (m.us || []).reduce((acc, p) => acc + (p.kills || 0), 0);
-    const isHp = String(m.mode || '').toLowerCase().includes('hardpoint');
+    const modeId = getModeId(m.mode);
+    const isHp = modeId === 'hardpoint';
     const squadHpTime = isHp ? (m.us || []).reduce((acc, p) => acc + (p.time || 0), 0) : 0;
     const pt = parseTier(m.tier);
     const isHighTier = pt.main === 'T1' || pt.main === 'T2';
     const isLowTier = pt.main === 'T3';
-    const isSnd = String(m.mode || '').toLowerCase().includes('search');
+    const isSnd = modeId === 'snd';
 
     (m.us || []).forEach(p => {
       const name = p.name || '?';
@@ -167,8 +170,9 @@ export function getPlayerMapBreakdown(matches = [], playerName = '') {
     .sort((a, b) => b.played - a.played)
     .map(v => {
       const slots = Math.max(v.teammateSlots, 1);
-      const isHp = v.mode.toLowerCase().includes('hardpoint');
-      const isSnd = v.mode.toLowerCase().includes('search');
+      const modeId = getModeId(v.mode);
+      const isHp = modeId === 'hardpoint';
+      const isSnd = modeId === 'snd';
 
       // Player averages
       const pKd = v.kills / Math.max(v.deaths, 1);

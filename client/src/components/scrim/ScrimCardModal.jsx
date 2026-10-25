@@ -7,6 +7,11 @@ import {
   Swords
 } from 'lucide-react';
 import { PALETTE, THEME_CLASSES } from '../../config/theme';
+import {
+  SERIES_FORMATS,
+  defaultSeriesFormat,
+  normalizeMode
+} from '../../config/matchOptions';
 
 export default function ScrimCardModal({
   isOpen,
@@ -29,9 +34,7 @@ export default function ScrimCardModal({
     if (selectedMatches.length > 0) {
       const opp = selectedMatches.find(m => m.opponent)?.opponent || 'OPPONENT';
       setOpponentName(opp);
-      if (selectedMatches.length === 3) setSeriesFormat('BEST OF 3');
-      else if (selectedMatches.length === 5) setSeriesFormat('BEST OF 5');
-      else setSeriesFormat(`SERIES (${selectedMatches.length} MAPS)`);
+      setSeriesFormat(defaultSeriesFormat(selectedMatches.length));
     }
   }, [selectedMatches]);
 
@@ -77,7 +80,7 @@ export default function ScrimCardModal({
 
       return {
         gameNum: idx + 1,
-        mode: m.mode || 'HARDPOINT',
+        mode: normalizeMode(m.mode) || m.mode || 'HARDPOINT',
         map: m.map || 'MAP',
         scoreUs: m.score_us || 0,
         scoreThem: m.score_them || 0,
@@ -577,7 +580,7 @@ export default function ScrimCardModal({
       link.click();
       if (showToast) showToast('High-Res Scrim Card Downloaded.');
     } catch (err) {
-      alert(`Download failed: ${err.message}`);
+      if (showToast) showToast(`Download failed: ${err.message}`);
     } finally {
       setDownloading(false);
     }
@@ -601,11 +604,11 @@ export default function ScrimCardModal({
         } catch (clipErr) {
           // If browser restricts direct image clipboard write, fallback
           console.warn('Clipboard write failed:', clipErr);
-          alert('Clipboard write was blocked by browser. Please use the Download button instead.');
+          if (showToast) showToast('Clipboard write was blocked. Use Download instead.');
         }
       }, 'image/png');
     } catch (err) {
-      alert(`Copy failed: ${err.message}`);
+      if (showToast) showToast(`Copy failed: ${err.message}`);
     }
   };
 
@@ -687,17 +690,16 @@ export default function ScrimCardModal({
 
             <div>
               <label className="block text-[10px] text-[#7d90a6] uppercase tracking-wider mb-1">
-                Format
+                Series Format ({selectedMatches.length} {selectedMatches.length === 1 ? 'map' : 'maps'})
               </label>
               <select
                 value={seriesFormat}
                 onChange={e => setSeriesFormat(e.target.value)}
                 className="w-full bg-[#080c14] border border-[#354b6d] focus:border-[#f5b700] text-white px-2.5 py-1.5 rounded-sm outline-none"
               >
-                <option value="BEST OF 3">BEST OF 3 (BO3)</option>
-                <option value="BEST OF 5">BEST OF 5 (BO5)</option>
-                <option value="SCRIM SERIES">SCRIM SERIES</option>
-                <option value="TOURNAMENT MATCH">TOURNAMENT MATCH</option>
+                {SERIES_FORMATS.map(format => (
+                  <option key={format.value} value={format.value}>{format.label}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -721,7 +723,7 @@ export default function ScrimCardModal({
                 <span className={m.result === 'W' ? 'text-[#ffd700]' : 'text-[#ff334b]'}>
                   {m.result === 'W' ? '✓' : '✗'}
                 </span>
-                <span>{m.mode} - {m.map}</span>
+                <span>{normalizeMode(m.mode) || m.mode} - {m.map}</span>
                 <span className="text-[#7d90a6]">({m.score_us}:{m.score_them})</span>
               </span>
             ))}

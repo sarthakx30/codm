@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import MapBannerBackdrop from '../common/MapBannerBackdrop';
 import { THEME_CLASSES } from '../../config/theme';
+import { getModeId } from '../../config/matchOptions';
 import {
   ChevronDown,
   ChevronUp,
@@ -178,7 +179,7 @@ export default function MapCard({ mapData }) {
                           {player.avgScore ? player.avgScore.toLocaleString() : '0'}
                         </span>
                       </div>
-                      {m.mode.includes('HARDPOINT') && (
+                      {getModeId(m.mode) === 'hardpoint' && (
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] text-[#7d90a6]">HILL TIME</span>
                           <span className="font-bold text-[#ffd700]">

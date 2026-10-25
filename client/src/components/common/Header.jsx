@@ -2,6 +2,7 @@ import React from 'react';
 import { RefreshCw, Radio, AlertOctagon, Tag } from 'lucide-react';
 import { APP_VERSION } from '../../config/version';
 import { THEME_CLASSES } from '../../config/theme';
+import { MATCH_SCOPES } from '../../config/matchOptions';
 
 export default function Header({
   filter,
@@ -11,7 +12,8 @@ export default function Header({
   onRefresh,
   loading,
   serverError,
-  onOpenAliasModal
+  onOpenAliasModal,
+  showScope = true
 }) {
   return (
     <header className="mb-6 border-b border-[#243044] pb-4">
@@ -97,28 +99,28 @@ export default function Header({
       )}
 
       {/* Filter Scope Bar */}
-      <div className="mt-4 flex flex-col gap-2 bg-[#111622] border border-[#243044] px-3.5 py-2 clip-corner-sm sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-xs font-display text-[#8292a8] tracking-wider">MATCH SCOPE</span>
-        <div className="flex gap-1.5 w-full sm:w-auto">
-          {[
-            { id: '', label: 'ALL MATCHES' },
-            { id: 'scrim', label: 'SCRIMS' },
-            { id: 'tournament', label: 'TOURNAMENTS' }
-          ].map(opt => (
-            <button
-              key={opt.id}
-              onClick={() => onFilterChange(opt.id)}
-              className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-1 text-[11px] sm:text-xs font-display text-center transition-all active:scale-95 ${
-                filter === opt.id
-                  ? THEME_CLASSES.btnPrimary
-                  : 'text-[#8292a8] hover:text-white border border-transparent'
-              } clip-corner-sm cursor-pointer`}
-            >
-              {opt.label}
-            </button>
-          ))}
+      {showScope && (
+        <div className="mt-4 flex flex-col gap-2 bg-[#111622] border border-[#243044] px-3.5 py-2 clip-corner-sm sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-xs font-display text-[#8292a8] tracking-wider">MATCH SCOPE</span>
+          <div className="flex gap-1.5 w-full sm:w-auto" role="group" aria-label="Match scope">
+            {MATCH_SCOPES.map(opt => (
+              <button
+                key={opt.value || 'all'}
+                type="button"
+                aria-pressed={filter === opt.value}
+                onClick={() => onFilterChange(opt.value)}
+                className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 sm:py-1 text-[11px] sm:text-xs font-display text-center uppercase transition-all active:scale-95 ${
+                  filter === opt.value
+                    ? THEME_CLASSES.btnPrimary
+                    : 'text-[#8292a8] hover:text-white border border-transparent'
+                } clip-corner-sm cursor-pointer`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
